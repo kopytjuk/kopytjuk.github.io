@@ -1,13 +1,13 @@
 ---
 layout: post
-title:  "Wrapping C++ in python for algorithm development"
+title:  "Wrapping C++ in Python for algorithm development & evaluation"
 ---
 
-# Wrapping C++ code in Python for algorithm development & evaluation
+<!-- # Wrapping C++ code in Python for algorithm development & evaluation -->
 
 ## TLDR;
 
-This article describes the the workflow benefits of wrapping C/C++ (or other languages) code to Python for algorithm development & evaluation. In particular, robotics-related implementations for ROS can heavily benefit from this approach.
+This article describes the the workflow benefits of wrapping C/C++ (or other languages) code to Python for algorithm development and evaluation. In particular, robotics-related implementations for ROS can heavily benefit from this approach.
 
 ## Motivation
 

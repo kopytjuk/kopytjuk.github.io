@@ -29,7 +29,7 @@ My previous experiences shaping my profile:
 <ul>
   {% for post in site.posts %}
     <li>
-      <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
+      <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }} ({{ post.date }})</a>
     </li>
   {% endfor %}
 
@@ -42,7 +42,7 @@ My previous experiences shaping my profile:
   </li>
 
   <li>
-    <a href="https://medium.com/analytics-vidhya/on-understanding-of-central-limit-theorem-visually-f70f9b0c02dc">On Understanding of Central Limit Theorem (visually) (Medium, 2018)</a>
+    <a href="https://medium.com/analytics-vidhya/on-understanding-of-central-limit-theorem-visually-f70f9b0c02dc">On Understanding of Central Limit Theorem (visually) (Medium, 2019)</a>
   </li>
 
   <li>
