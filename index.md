@@ -26,4 +26,20 @@ My previous experiences shaping my profile:
       <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
     </li>
   {% endfor %}
+
+  <li>
+    <a href="https://medium.com/@kopytjuk/from-c-to-machine-code-demystifying-cpu-mechanics-e5d4cf967e8?sk=351151efbfd3ecce1521e98eb692df4b">From C to machine code — demystifying CPU mechanics (Medium, 2019)</a>
+  </li>
+
+  <li>
+    <a href="https://towardsdatascience.com/on-simulating-non-linear-dynamic-systems-with-python-or-how-to-gain-insights-without-using-ml-353eebf8dcc3?sk=80b7eca673715025627ab7f3612e9259">On simulating non-linear dynamic systems with Python or how to gain insights without using ML (Medium, 2019)</a>
+  </li>
+
+  <li>
+    <a href="https://medium.com/analytics-vidhya/on-understanding-of-central-limit-theorem-visually-f70f9b0c02dc">On Understanding of Central Limit Theorem (visually) (Medium, 2018)</a>
+  </li>
+
+  <li>
+    <a href="https://medium.com/analytics-vidhya/sum-of-two-random-variables-or-the-rocky-path-to-understanding-convolutions-of-probability-b0fc29aca3b5">Sum of two random variables or the rocky path to understanding convolutions of probability distributions (Medium, 2019)</a>
+  </li>
 </ul>
