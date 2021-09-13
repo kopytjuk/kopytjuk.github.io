@@ -2,6 +2,8 @@
 
 # About me
 
+<img src="assets/me.jpg" alt="me" width="400"/>
+
 Development engineer at Bosch combining cross-domain knowledge in mechatronical systems, robotics, software engineering, cloud and data science towards great products and services.
 
 I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `numpy` and `bokeh`) for my professional and hobby projects.
