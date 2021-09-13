@@ -4,7 +4,11 @@
 
 <img src="assets/me.jpg" alt="me" width="400"/>
 
-Development engineer at Bosch combining cross-domain knowledge in mechatronical systems, robotics, software engineering, cloud and data science towards great products and services.
+Hello world!
+
+My name is Marat, I am in my late 20s, work and live in Southern Germany. I was born in Belarus, got my mechatronics degree in Germany. I speak German, English and English.
+
+I count myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and data science is essential towards inspiring, efficient, future-proof and reliable products.
 
 I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `numpy` and `bokeh`) for my professional and hobby projects.
 
@@ -16,7 +20,7 @@ My previous experiences shaping my profile:
 - KPI Reporting with [Dash](https://plotly.com/dash/) (interactive) and [Jinja](https://jinja.palletsprojects.com/en/3.0.x/) (static) (2018-now)
 - Data engineering with [Azure Batch](https://azure.microsoft.com/en-us/services/batch/) and ML workflow management with [Azure ML](https://azure.microsoft.com/en-us/services/machine-learning/) (2018-now)
 - Gitlab CI/CD pipelines involing Docker and `pytest` (2018-now)
-- [Frenét-frame trajectory planner](https://ieeexplore.ieee.org/document/5509799?arnumber=5509799) integration from MATLAB to ROS2 in C++ (2020)
+- [Frenét-frame trajectory planner](https://ieeexplore.ieee.org/document/5509799?arnumber=5509799) integration from `MATLAB` to ROS2 in C++ (2020)
 - Wrapping C++ routines to use in Python with [`pybind11`](https://github.com/pybind/pybind11) (2021)
 - Small open source contributions to `opencv`, `tensorflow`, `matplotlib` and `bokeh` (2018-now)
 
