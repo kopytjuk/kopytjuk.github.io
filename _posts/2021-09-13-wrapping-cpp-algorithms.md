@@ -11,7 +11,7 @@ This article describes the the workflow benefits of wrapping C/C++ (or other lan
 
 ## Motivation
 
-A lot of algorithms implemented in the automotive or other industrial domains are implemented using the [model-based design](https://en.wikipedia.org/wiki/Model-based_design) approach[1]. Usually this workflow involves rougly:
+A lot of algorithms implemented in the automotive or other industrial domains are implemented using the [model-based design](https://en.wikipedia.org/wiki/Model-based_design) approach [1]. Roughly this workflow involves:
 
 1. Definition of processing steps in a high level (or even visual) language
 2. Simulation
@@ -31,7 +31,7 @@ Image credits by Embitel, 2019.
 
 <br/>
 
-However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of his choice (like Python or Scala). In addition to that, he calculate some metrics like mean squared error (MSE) or accuracy to show how the  logic is performing. After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a C/C++ implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
+However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of her choice (like Python or Scala). In addition to that, she calculates some quality metrics like mean squared error (MSE) or accuracy to show how well the logic is performing. After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
 
 But how to make sure that the target implementation is as good as the PoC?
 
@@ -42,13 +42,15 @@ A naive approach would involve compiling generated code, transmit the build to t
 ### C++
 
 ```cpp
+// myalgorithm.hpp
+
 #include <vector>
 
 class MyAlgorithm {
     public:
         MyAlgorithm(float param);
 
-        // the algorithm implementation
+        // the algorithm main routine
         float step(float input);
 
         void set_param(float p);
@@ -101,6 +103,20 @@ for t in range(10):
 
 accuracy = evaluate(results)
 ```
+
+## Key Benefits
+
+- Avoid data recording overhead on the target hardware
+- Try your algorithm with various inputs and parameters without additional C++ code for data feeding and result conversion.
+- Simulation and evaluation directly in Python, libraries like `scikit-learn` for evaluation or `mlflow` for experiment tracking can be used directly.
+- Compare your PoC with the final implementation
+
+## Limitations
+
+Please note that the proposed approach has also some limitations which you have to be aware of before starting intergrating the workflow in your project:
+
+- Target device specific routines using embedded circuits, e.g. TPU units or ASICs for audio processing or neural network inference. Those have to be reimplemented (or called) in C/C++ or in Python.
+- Real time applications, simulation time loop has to be realistic!
 
 ## References
 
