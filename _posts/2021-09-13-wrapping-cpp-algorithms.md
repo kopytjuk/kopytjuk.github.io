@@ -30,6 +30,7 @@ Image credits by Embitel, 2019.
 </details>
 
 <br/>
+<br/>
 
 However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of his choice (like Python or Scala). In addition to that, he calculate some metrics like mean squared error (MSE) or accuracy to show how the  logic is performing. After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a C/C++ implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
 
