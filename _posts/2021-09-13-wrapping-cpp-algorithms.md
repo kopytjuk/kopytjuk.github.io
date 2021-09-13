@@ -22,14 +22,14 @@ Companies like [Mathworks](https://de.mathworks.com/) provide commercial tools a
 
 <details> 
   <summary>FYI: See how complex it can look like for large projects.</summary>
-<p>
 A lot of modelling, testing and project management tools are used in context of a complex industry application:
 
 <img src="https://www.embitel.com/wp-content/uploads/Model-Based-Development-V-process.png"/>
 
 Image credits by Embitel, 2019.
-</p>
 </details>
+
+<br/>
 
 However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of his choice (like Python or Scala). In addition to that, he calculate some metrics like mean squared error (MSE) or accuracy to show how the  logic is performing. After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a C/C++ implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
 
