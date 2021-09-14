@@ -35,13 +35,15 @@ However, for smaller projects (with a smaller budget) a developer may create a P
 
 The "architecture" on the development machine would look similar to the following diagram:
 
-<img src="{{ site.baseurl }}/assets/blog/poc-arch.png" alt="poc-arch" width="400"/>
+<img src="{{ site.baseurl }}/assets/blog/poc-arch.png" alt="poc-arch" width="90%"/>
 
 After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
 
-But how to make sure that the target implementation is as good as the PoC?
+But how to make sure that the final implementation is as good as the PoC?
 
-A naive approach would involve compiling generated code, transmit the build to the target device, exectute it and simultaniously record the algorithms outputs.
+A naive approach would involve compiling generated code, transmit the build to the target device, generate some (artificial) input data, run the executable and simultaniously record the algorithms outputs:
+
+<img src="{{ site.baseurl }}/assets/blog/target-arch.png" alt="target-arch" width="90%"/>
 
 ## Software architecture
 
