@@ -35,7 +35,7 @@ However, for smaller projects (with a smaller budget) a developer may create a P
 
 The "architecture" on the development machine would look similar to the following diagram:
 
-<img src="../assets/blog/poc-arch.png" alt="me" width="500"/>
+![poc-arch](../assets/blog/poc-arch.png)
 
 After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
 
