@@ -14,7 +14,7 @@ This article describes the the workflow benefits of wrapping C/C++ (or other lan
 A lot of algorithms implemented in the automotive or other industrial domains are implemented using the [model-based design](https://en.wikipedia.org/wiki/Model-based_design) approach [1]. Roughly this workflow involves:
 
 1. Definition of processing steps in a high level (or even visual) language
-2. Simulation
+2. Simulation (with virtual/artificial data or system behaviour)
 3. Finally, a code generation for the target language (e.g. C/C++ or Assembly)
 4. Testing of the generated code
 
@@ -44,6 +44,16 @@ But how to make sure that the final implementation is as good as the PoC?
 A naive approach would involve compiling generated code, transmit the build to the target device, generate some (artificial) input data, run the executable and simultaniously record the algorithms outputs:
 
 <img src="{{ site.baseurl }}/assets/blog/target-arch.png" alt="target-arch" width="90%"/>
+
+Even if we use an emulator for the target device or simply compile a regular executable on our develepoment machine, we always have to introduce some overhead "measuring" the algorithm's internals and its output.
+
+Let's summarize the key benefits and downsides of the approach above:
+
++ Code executed on the target device
++ Impact of execution speed, data transmission and network errors can be evaluated
+- Data feed to the target device has to be implemented
+- Recording data introduces more complexity
+- Too heavy for a functional-only assessment (/wo target hardware and network issues)
 
 ## Software architecture
 
