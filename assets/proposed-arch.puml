@@ -1,0 +1,15 @@
+@startuml
+left to right direction
+
+title "Proposed Approach"
+
+[Data Generator] as datagen
+
+component CustomAlgoPy {
+[CustomAlgoCpp] as algo #yellow
+}
+[Evaluation] as eval
+
+datagen --> CustomAlgoPy
+CustomAlgoPy --> eval
+@enduml

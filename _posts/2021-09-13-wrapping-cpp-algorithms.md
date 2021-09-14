@@ -31,7 +31,13 @@ Image credits by Embitel, 2019.
 
 <br/>
 
-However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of her choice (like Python or Scala). In addition to that, she calculates some quality metrics like mean squared error (MSE) or accuracy to show how well the logic is performing. After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
+However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of her choice (like Python or Scala). In addition to that, he or she calculates some quality metrics like mean squared error (MSE) or accuracy to show how well the logic is performing.
+
+The "architecture" on the development machine would look similar to the following diagram:
+
+<img src="assets/blog/poc-arch.png" alt="me" width="500"/>
+
+After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
 
 But how to make sure that the target implementation is as good as the PoC?
 

@@ -1,0 +1,28 @@
+@startuml
+left to right direction
+
+title "Evaluation target implementation"
+
+node "Dev Environment" {
+[Data Generator] as datagen
+[Recorder] as rec
+[Evaluation] as eval
+rec --> eval
+datagen --> eval
+}
+
+node "Target Environment" {
+component CustomExecutable {
+[CustomAlgoCpp] as algo #yellow
+}
+'Interfaces
+() "Input" as inp_if
+() "Output" as out_if
+}
+
+datagen --> inp_if
+inp_if --> CustomExecutable
+CustomExecutable --> out_if
+'inp_if --> rec
+out_if --> rec
+@enduml
