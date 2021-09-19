@@ -13,10 +13,10 @@ This article describes the benefits of calling production-focused low-level (C/C
 
 Often, algorithms implemented in the automotive or other industrial domains are developed using the [model-based design](https://en.wikipedia.org/wiki/Model-based_design) (MbD) idiom [1]. Roughly the workflow involves:
 
-1. Definition of computation steps in a high level (or even visual) language. E.g. `compute_mean(signal)`, `value = read_sensor()` etc.
-2. Simulation and experimentation (with virtual/artificial data or system behaviour). Creating visualizations or performance assessments of the algorithm.
-3. Finally, a code generation for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
-4. Testing of the generated code on the target environment
+1. Definition of *computation steps in a high level* (or even visual) language. E.g. `compute_mean(signal)` or `value = read_sensor()` etc.
+2. *Simulation and experimentation* (with virtual/artificial data or system behaviour). Creating visualizations or performance assessments of the algorithm.
+3. Finally, *code generation* for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
+4. *Testing* of the generated code on the target environment
 
 Thus approach allows fast (rapid) prototyping **and** high quality code, since the generators are often well tested.
 
