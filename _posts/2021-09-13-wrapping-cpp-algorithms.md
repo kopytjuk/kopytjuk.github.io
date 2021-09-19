@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Jsing python for pre-production algorithm evaluation and analysis."
+title:  "Using python for pre-production algorithm evaluation and analysis."
 ---
 
 <!-- # Wrapping C++ code in Python for algorithm development & evaluation -->
