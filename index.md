@@ -8,9 +8,9 @@ Hello world!
 
 My name is Marat, I am in my late 20s, work and live in Southern Germany. I was born in Belarus, got my mechatronics degree in Germany. My mother language is Russian, but over the time the available vocabulary in German and English got more advanced.
 
-I count myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and data science is essential towards inspiring, efficient, future-proof and reliable products.
+I count myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and probability theory is essential towards inspiring, efficient, future-proof and reliable products.
 
-I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `numpy` and `bokeh`) for my professional and hobby projects.
+I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `scipy` and `pandas`) for my professional and hobby projects.
 
 ## Blog posts
 
