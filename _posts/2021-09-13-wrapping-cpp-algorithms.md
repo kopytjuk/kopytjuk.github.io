@@ -7,21 +7,23 @@ title:  "Jsing python for pre-production algorithm evaluation and analysis."
 
 ## TLDR;
 
-This article describes the benefits and limitations of calling production-focused low-level (C/C++) code in Python for functional evaluation and analysis. Assessment tools developed previously during the PoC stage can be reused. Furthermore, complexity for experimentation with various internal parameters is reduced, which can reduce costs and expensive debugging before the final deployment. 
+This article describes the benefits of calling production-focused low-level (C/C++) code in Python for functional evaluation and analysis. Assessment tools developed previously during the PoC stage can be reused. Furthermore, complexity for experimentation with various internal parameters is reduced, which can reduce costs and expensive debugging before the final deployment. In the end of the article the key benefits and limitations are presented.
 
 ## Motivation
 
-A lot of algorithms implemented in the automotive or other industrial domains are implemented using the [model-based design](https://en.wikipedia.org/wiki/Model-based_design) approach [1]. Roughly this workflow involves:
+Often, algorithms implemented in the automotive or other industrial domains are developed using the [model-based design](https://en.wikipedia.org/wiki/Model-based_design) (MbD) idiom [1]. Roughly the workflow involves:
 
-1. Definition of computation steps in a high level (or even visual) language
-2. Simulation (with virtual/artificial data or system behaviour)
-3. Finally, a code generation for the target language (e.g. C/C++ or Assembly)
-4. Testing of the generated code
+1. Definition of computation steps in a high level (or even visual) language. E.g. `compute_mean(signal)`, `value = read_sensor()` etc.
+2. Simulation and experimentation (with virtual/artificial data or system behaviour). Creating visualizations or performance assessments of the algorithm.
+3. Finally, a code generation for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
+4. Testing of the generated code on the target environment
 
-Companies like [Mathworks](https://de.mathworks.com/) provide commercial tools across the whole development chain. A huge benefit in my opinion is the possibility to experiment and prototype in a high level language before implementing production ready code.
+Thus approach allows fast (rapid) prototyping **and** high quality code, since the generators are often well tested.
+
+Companies like [Mathworks](https://de.mathworks.com/) provide specialized tools across the whole development chain. Often those tools are expensive for small projects so a smaller solution may be sutable.
 
 <details> 
-  <summary>FYI: See how tricky it can look like for large projects.</summary>
+  <summary>FYI: See how tricky MbD can look like for large projects.</summary>
 A lot of modelling, testing and project management tools are used in context of a complex industry application:
 
 <img src="https://www.embitel.com/wp-content/uploads/Model-Based-Development-V-process.png"/>
@@ -31,13 +33,13 @@ Image credits by Embitel, 2019.
 
 <br/>
 
-However, for smaller projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of her choice (like Python or Scala). In addition to that, he or she calculates some quality metrics like mean squared error (MSE) or accuracy to show how well the logic is performing.
+However, for small projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of her choice (like Python or Scala) before turning to C/C++. In addition to that, he or she calculates some quality metrics like mean squared error (MSE) or accuracy to show (off) how well the logic is performing.
 
 The "architecture" on the development machine would look similar to the following diagram:
 
 <img src="{{ site.baseurl }}/assets/blog/poc-arch.png" alt="poc-arch" width="90%"/>
 
-After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this for execution speed and scale.
+After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this also for execution speed and scale.
 
 But how to make sure that the final implementation is functionally as good as the PoC? A functional evaluation involves a pure evaluation focusing on the algorithmic part ignoring communication issues and other intergration effects.
 
@@ -173,15 +175,16 @@ Let's summarize the key benefits of making the logic accessible in a high level 
 Please note that the proposed approach has also some limitations which you have to be aware of, before starting intergrating the workflow in your project:
 
 - Use it for functional validation only. It is not a replacement for a full system test.
-- Target device specific routines using embedded circuits, e.g. TPU units or ASICs for audio processing or neural network inference. Those have to be reimplemented (or called) in C/C++ or in Python.
-- Similar to the statement above: in case you have target device specific implementation of libraries you use, first check if they are reliable and behave like those on your development machine.
+- Target device specific routines relying on embedded circuits, e.g. ASICs for audio processing or TPUs for neural network inference. Those have to be reimplemented (or called) in C/C++ or in Python.
+- Similar to the statement above, in case you have target device specific implementation of libraries you use, first check if they are reliable and behave like those on your development machine.
 
-## Further information
+## You want more?
 
 If you are interested in the concepts and challenges of algorithm development I recommend following resources:
 
 - An [article](https://serge-sans-paille.github.io/pythran-stories/pythran-as-a-bridge-between-fast-prototyping-and-code-deployment.html) of an audio processing engineer bridging the gap between Python and C++ code with `pythran`. The library is not very mature but the charming idea is to skip the C++ coding entirely.
 - Take a look how [Mathworks pitches](https://de.mathworks.com/solutions/model-based-design.html) model based design
+- A [ROS1 tutorial](http://wiki.ros.org/ROS/Tutorials/Using%20a%20C%2B%2B%20class%20in%20Python) on how to feed a C++ node implementation from Python.
 
 ## References
 
