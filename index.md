@@ -17,7 +17,7 @@ I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) sta
 <ul>
   {% for post in site.posts %}
     <li>
-      <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }} ({{ post.date }})</a>
+      <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }} ({{ post.date  | date: '%Y' }})</a>
     </li>
   {% endfor %}
 
