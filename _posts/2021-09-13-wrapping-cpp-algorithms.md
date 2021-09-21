@@ -7,7 +7,7 @@ title:  "Wrap C++ algorithms in Python for pre-production evaluation and experim
 
 ## TLDR;
 
-This article describes the benefits of calling production-focused low-level (C/C++) code in Python for functional evaluation and analysis. Assessment tools developed previously during the PoC stage can be reused. Furthermore, complexity for experimentation with various internal parameters is reduced, which can reduce costs and expensive debugging before the final deployment. In the end of the article the key benefits and limitations are presented.
+This article describes the benefits of calling production-focused low-level (C/C++) code in Python for **functional** evaluation and analysis. Assessment tools developed previously during the PoC stage can be reused. Furthermore, the complexity for experimentation with various internal parameters is reduced, which can optimize costs and expensive debugging prior to the final deployment. In the end of the article the key benefits and limitations are presented.
 
 ## Motivation
 
@@ -41,15 +41,15 @@ The "architecture" on the development machine would look similar to the followin
 
 The functional blocks may be code blocks of a single Python script or alternatively, a collection of scripts passing data files between them.
 
-After the stakeholders are satisfied, the developers may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the logic to the target language. Sometimes the engineers have to do this also for execution speed and scale.
+After the stakeholders are satisfied, the developers may refactor the codebase for production use. Note that keeping the same language as in PoC stage is only possible if the algorithm is intended to run on the same type of machines as the developers use. More often, the target platform (e.g. an embedded device like a vacuum cleaner robot) requires a device specific implementation -- the engineers are forced to rewrite the logic in a lower-level lanauge. Even if the target platform is a "normal" PC,  the engineers want to do the reimplementation for execution speed and scale.
 
-But how to make sure that the final implementation is functionally as good as the PoC? Usually, a functional evaluation involves a pure evaluation focusing on the algorithmic part, often ignoring communication issues and other intergration effects.
+But how to make sure that the final implementation is functionally as good as the PoC? Please note, that a functional evaluation involves a pure evaluation focusing on the algorithmic part first, often ignoring communication issues and other intergration effects.
 
 A naive assessment approach would involve compiling generated code, transmit the build to the target device, generate some (artificial) input data, run the executable and simultaniously record the algorithm's outputs:
 
 <img src="{{ site.baseurl }}/assets/blog/target-arch.png" alt="target-arch" width="90%"/>
 
-Even if the developers use an emulator for the target device or simply compile a regular executable on our develepoment machine, they always have to introduce some overhead "measuring" the algorithm's internals and its output. Of course, in return for the additional complexity the engineers will be able to evaluate the real world performance including communication delays and performance fall-offs. Also they will be more sure that system libraries on the target device are working as intended.
+Even if the developers use an emulator for the target device or simply compile a regular executable on their develepoment machine, they always have to introduce some overhead "measuring" the algorithm's internals and its outputs. Of course, in return for the additional complexity the engineers will be able to evaluate the real world performance including communication delays and performance fall-offs. Also they will be more sure that system libraries on the target device are working as intended. Still, the measurement brings additional efforts to the workbench and slows down the development.
 
 Let's summarize the key benefits and downsides of the approach above:
 
