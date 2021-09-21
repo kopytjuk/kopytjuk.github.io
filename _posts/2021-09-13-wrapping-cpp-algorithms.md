@@ -15,12 +15,12 @@ Often, algorithms implemented in the automotive or other industrial domains are 
 
 1. Definition of *computation steps in a high level* (or even visual) language. E.g. `compute_mean(signal)` or `value = read_sensor()` etc.
 2. *Simulation and experimentation* (with virtual/artificial data or system behaviour). Creating visualizations or performance assessments of the algorithm.
-3. Finally, *code generation* for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
-4. *Testing* of the generated code on the target environment
+3. *Code generation* for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
+4. Finally, *testing* of the generated code on the target environment
 
 Thus approach allows fast (rapid) prototyping **and** high quality code, since the generators are often well tested.
 
-Companies like [Mathworks](https://de.mathworks.com/) provide specialized tools across the whole development chain. Often those tools are expensive for small projects so a smaller solution may be sutable.
+Companies like [Mathworks](https://de.mathworks.com/) provide specialized tools across the whole development chain. Often those tools are expensive for small projects so a smaller solution may be suitable.
 
 <details> 
   <summary>FYI: See how tricky MbD can look like for large projects.</summary>
@@ -33,21 +33,23 @@ Image credits by Embitel, 2019.
 
 <br/>
 
-However, for small projects (with a smaller budget) a developer may create a Proof of Concept (PoC) for the algorithm in a scripting language of her choice (like Python or Scala) before turning to C/C++. In addition to that, he or she calculates some quality metrics like mean squared error (MSE) or accuracy to show (off) how well the logic is performing.
+However, for small projects (with a smaller budget) the developers may create a Proof of Concept (PoC) for the algorithm in a scripting language of their choice (like Python or Scala) before turning to C/C++. In addition to that, the engineers usually want to calculate some quality metrics like mean squared error (MSE) or accuracy (for classification tasks) to show (off) how well the logic is performing.
 
 The "architecture" on the development machine would look similar to the following diagram:
 
 <img src="{{ site.baseurl }}/assets/blog/poc-arch.png" alt="poc-arch" width="90%"/>
 
-After the stakeholders are satisfied, we may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the routine to the target language. Sometimes we have to do this also for execution speed and scale.
+The functional blocks may be code blocks of a single Python script or alternatively, a collection of scripts passing data files between them.
 
-But how to make sure that the final implementation is functionally as good as the PoC? A functional evaluation involves a pure evaluation focusing on the algorithmic part ignoring communication issues and other intergration effects.
+After the stakeholders are satisfied, the developers may refactor the codebase or -- if the target platform (e.g. embedded device) requires a device specific implementation -- rewrite the logic to the target language. Sometimes the engineers have to do this also for execution speed and scale.
 
-A naive assessment approach would involve compiling generated code, transmit the build to the target device, generate some (artificial) input data, run the executable and simultaniously record the algorithms outputs:
+But how to make sure that the final implementation is functionally as good as the PoC? Usually, a functional evaluation involves a pure evaluation focusing on the algorithmic part, often ignoring communication issues and other intergration effects.
+
+A naive assessment approach would involve compiling generated code, transmit the build to the target device, generate some (artificial) input data, run the executable and simultaniously record the algorithm's outputs:
 
 <img src="{{ site.baseurl }}/assets/blog/target-arch.png" alt="target-arch" width="90%"/>
 
-Even if we use an emulator for the target device or simply compile a regular executable on our develepoment machine, we always have to introduce some overhead "measuring" the algorithm's internals and its output. Of course, in return for the additional complexity we will be able to evaluate the real world performance including communication delays and performance fall-offs. Also we will be sure that system libraries on the target device are working as intended.
+Even if the developers use an emulator for the target device or simply compile a regular executable on our develepoment machine, they always have to introduce some overhead "measuring" the algorithm's internals and its output. Of course, in return for the additional complexity the engineers will be able to evaluate the real world performance including communication delays and performance fall-offs. Also they will be more sure that system libraries on the target device are working as intended.
 
 Let's summarize the key benefits and downsides of the approach above:
 
@@ -58,23 +60,24 @@ Let's summarize the key benefits and downsides of the approach above:
 
 ## Proposed solution
 
-For the functional assessment following architecture is proposed. We wrap the low-level language (C++) implementation into a shared library and call it from the high level language (Python). We simulate time in a loop and record the results to a container (like `list()`) or save to disk. Finally we evaluate the results in the same way we did it in the PoC stage.
+For the functional assessment following architecture is proposed. The low-level language (C++) implementation is wrapped into a shared library and called from the high level language (e.g. Python). The (discrete) wall time is simulated in a  `for` loop  the outputs are recorded to a container (like `list()`) or saved to disk. Finally the outputs of the algorithm are evaluated in the same manner as in the PoC stage.
 
 <img src="{{ site.baseurl }}/assets/blog/proposed-arch.png" alt="proposed-arch" width="90%"/>
 
-Addionally to addressing the drawbacks from the last section we can achieve the following easily:
+Addionally to addressing the drawbacks from the last section the following can be achieved following easily:
 
 - change the internal parameters within the loop
-- apply noise to input data
+- apply (time-varying) noise to input data
 - observe and record internal state variables like buffers or counters
+- reset/manipulate the internal state
 
-In the next section we will take a look at the basic skeleton required for the present approach.
+In the next section provides a basic code overview required for the proposed approach.
 
 ## Software architecture
 
 ### C++
 
-First we need an implementation in the low-level language. You will probably have the required methods like (getters and setters), `step()` or `run()` anyway, so the changes are expected to be small.
+First, an implementation in the low-level language is needed. Most probably, the required methods like (getters and setters), `step()` or `run()` are already implemented, so the proposed changes to match the code sceleton below are expected to be small.
 
 ```cpp
 // customalgo.hpp
@@ -102,7 +105,7 @@ class CustomAlgo {
 ```
 ### Python interface (pybind11)
 
-In order to create a Python wrapper for a `C++` object you would do the following. Take a look at the official [pybind11](https://pybind11.readthedocs.io/en/stable/index.html) documentation.
+The following module defines a Python wrapper for the `C++` object above. Take a look at the official [pybind11](https://pybind11.readthedocs.io/en/stable/index.html) documentation.
 
 
 ```cpp
@@ -120,11 +123,11 @@ PYBIND11_MODULE(customalgo, m) {
 }
 ```
 
-After a successful compilation you have a `.so` (Unix) or `.dll` (Windows) which you can import in any Python script.
+After a successful compilation a `.so` (Unix) or `.dll` (Windows) shared library is available, which can be imported into any Python module.
 
 ### Python
 
-On the Python side you can do "whatever you want". You may call `step()` methon in a loop and record the results. You may instantiate the algorithm multiple times and run with same data and several parameters, parametrize it on the fly etc ...
+On the Python side the possibilities are endless. A developer may call `step()` methon in a loop and record the results. Alternatively one may instantiate the algorithm multiple times and run with same data and several parameters, parametrize it on the fly etc ...
 
 ```python
 import random
@@ -165,7 +168,7 @@ detailed_analysis(states, results)
 
 Let's summarize the key benefits of making the logic accessible in a high level language like Python:
 
-- Avoid data feeding and recording efforts for the target environment or hardware
+- Avoid data feeding and recording efforts for the target environment or hardware. Manipulate or reset the internal state within the simulation loop in the scripting language.
 - Evaluate your algorithm with various inputs and parameters without additional C++ code for data feeding and result conversion.
 - Simulation, analysis and evaluation are directly in Python, libraries like `scikit-learn` for evaluation or `mlflow` for experiment tracking can be used effortlessly.
 - Compare your PoC with the final implementation easily (even in the same `for`-loop)
@@ -174,9 +177,9 @@ Let's summarize the key benefits of making the logic accessible in a high level 
 
 Please note that the proposed approach has also some limitations which you have to be aware of, before starting intergrating the workflow in your project:
 
-- Use it for functional validation only. It is not a replacement for a full system test.
-- Target device specific routines relying on embedded circuits, e.g. ASICs for audio processing or TPUs for neural network inference. Those have to be reimplemented (or called) in C/C++ or in Python.
-- Similar to the statement above, in case you have target device specific implementation of libraries you use, first check if they are reliable and behave like those on your development machine.
+- **Use it for functional assessment only**. It is not a replacement for a full system test.
+- Target device specific routines relying on embedded circuits, e.g. ASICs for audio processing or TPUs for neural network inference may be unavailable on your (`unix`-oid) development machine. Those have to be reimplemented/replaced in C/C++.
+- Similar to the statement above, in case you have proprietary target device specific implementations of libraries you link to, first check if they are reliable and behave in the equal manner to those on your development machine.
 
 ## You want more?
 
