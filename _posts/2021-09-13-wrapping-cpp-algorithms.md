@@ -15,7 +15,7 @@ Often, algorithms implemented in the automotive or other industrial domains are 
 
 1. Definition of *computation steps in a high level* (or even visual) language. E.g. `val = read_sensor()` or `res = compute_mean(val)` etc.
 2. *Simulation and experimentation* (with virtual/artificial data or system behaviour). Creating visualizations or performance assessments of the algorithm.
-3. *Code generation* for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
+3. *Code generation* (porting) for the target environment (e.g. C for embedded devices or C++ for a specialized server hardware).
 4. Finally, *testing* of the generated code on the target environment
 
 Thus approach allows fast (rapid) prototyping **and** high quality code, since the generators are often well tested.
@@ -33,7 +33,7 @@ Image credits by Embitel, 2019.
 
 <br/>
 
-However, for small projects (with a smaller budget) the developers may create a Proof of Concept (PoC) for the algorithm in a scripting language of their choice (like Python or Scala) before turning to C/C++. In addition to that, the engineers usually want to calculate some quality metrics like mean squared error (MSE) or accuracy (for classification tasks) to show (off) how well the logic is performing.
+However, for small projects (with a smaller budget) the developers may create a Proof of Concept (PoC) for the algorithm in a scripting language of their choice (like Python or Scala) before turning to C/C++ ports. In addition to that, the engineers usually want to calculate some quality metrics like mean squared error (MSE) or accuracy (for classification tasks) to show (off) how well the logic is performing.
 
 The "architecture" on the development machine would look similar to the following diagram:
 
@@ -60,7 +60,7 @@ Let's summarize the key benefits and downsides of the approach above:
 
 ## Proposed solution
 
-For the functional assessment following architecture is proposed. The low-level language (C++) implementation is wrapped into a shared library and called from the high level language (e.g. Python). The (discrete) wall time is simulated in a  `for` loop  the outputs are recorded to a container (like `list()`) or saved to disk. Finally the outputs of the algorithm are evaluated in the same manner as in the PoC stage.
+For the functional assessment following architecture is proposed. The low-level language (C++) port is wrapped into a shared library and called from the high level language (e.g. Python). The (discrete) wall time is simulated in a  `for` loop  the outputs are recorded to a container (like `list()`) or saved to disk. Finally the outputs of the algorithm are evaluated in the same manner as in the PoC stage.
 
 <img src="{{ site.baseurl }}/assets/blog/proposed-arch.png" alt="proposed-arch" width="90%"/>
 
@@ -188,6 +188,7 @@ If you are interested in the concepts and challenges of algorithm development I 
 - An [article](https://serge-sans-paille.github.io/pythran-stories/pythran-as-a-bridge-between-fast-prototyping-and-code-deployment.html) of an audio processing engineer bridging the gap between Python and C++ code with `pythran`. The library is not very mature but the charming idea is to skip the C++ coding entirely.
 - Take a look how [Mathworks pitches](https://de.mathworks.com/solutions/model-based-design.html) model based design
 - A [ROS1 tutorial](http://wiki.ros.org/ROS/Tutorials/Using%20a%20C%2B%2B%20class%20in%20Python) on how to feed a C++ node implementation from Python.
+- [Numba](http://numba.pydata.org/) for JIT compiling of python routines, an interesting alternative for computing demanding application before porting everything to C++.
 
 ## Credits
 
