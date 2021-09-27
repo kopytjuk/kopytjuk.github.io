@@ -7,7 +7,8 @@ title:  "Wrap C++ algorithms in Python for pre-production evaluation and experim
 
 ## TLDR;
 
-This article describes the benefits of calling production-focused low-level (C/C++) code in Python for **functional** evaluation and analysis. Assessment tools developed previously during the PoC stage can be reused. Furthermore, the complexity for experimentation with various internal parameters is reduced, which can optimize costs and expensive debugging prior to the final deployment. In the end of the article the key benefits and limitations are presented.
+In *model based design* paradigm one often implements a proof-of-concept solution in a scripting language before porting the logic to a more performant low-level language like C/C++.
+This article describes the benefits of calling production-ready (C/C++) ports in Python for **functional** evaluation and analysis. Assessment tools developed previously during the experimentation stage can be reused. Furthermore, the complexity for experimentation with various internal parameters is reduced, which can optimize costs and expensive debugging prior to the final deployment. In the end of the article the key benefits and limitations are presented.
 
 ## Motivation
 
