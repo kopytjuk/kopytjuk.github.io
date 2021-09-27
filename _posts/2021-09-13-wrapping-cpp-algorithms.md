@@ -189,6 +189,10 @@ If you are interested in the concepts and challenges of algorithm development I 
 - Take a look how [Mathworks pitches](https://de.mathworks.com/solutions/model-based-design.html) model based design
 - A [ROS1 tutorial](http://wiki.ros.org/ROS/Tutorials/Using%20a%20C%2B%2B%20class%20in%20Python) on how to feed a C++ node implementation from Python.
 
+## Credits
+
+Thanks to [@annaformaniuk](https://github.com/annaformaniuk) and [Christian](https://www.linkedin.com/in/christian-herzog-367b21156/) for discussions and proof reading.
+
 ## References
 
 [1] https://en.wikipedia.org/wiki/Model-based_design
