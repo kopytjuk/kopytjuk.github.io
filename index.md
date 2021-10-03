@@ -38,6 +38,13 @@ I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) sta
   </li>
 </ul>
 
+
+## Projects
+
+- [Aerial Radar & Sunlight Raytracing](https://github.com/kopytjuk/raydar)
+- [Introduction to Radar Signal Processing](https://github.com/kopytjuk/python-fmcw)
+- [IMDb stream checker](https://github.com/kopytjuk/imdb-checker)
+
 ## Portfolio
 
 My previous experiences which shaped my horizon:
