@@ -190,6 +190,7 @@ If you are interested in the concepts and challenges of algorithm development I 
 - Take a look how [Mathworks pitches](https://de.mathworks.com/solutions/model-based-design.html) model based design
 - A [ROS1 tutorial](http://wiki.ros.org/ROS/Tutorials/Using%20a%20C%2B%2B%20class%20in%20Python) on how to feed a C++ node implementation from Python.
 - [Numba](http://numba.pydata.org/) for JIT compiling of python routines, an interesting alternative for computing demanding application before porting everything to C++.
+- [prometeo](https://github.com/zanellia/prometeo) an experimental Python-to-C transpiler and domain specific language for embedded high-performance computing. The output of the package is a (Python-) indenpendent C code.
 
 ## Credits
 
