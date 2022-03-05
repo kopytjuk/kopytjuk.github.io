@@ -1,6 +1,6 @@
 ---
 title: "Wrap C++ algorithms in Python for pre-production evaluation and experimentation."
-date: 2022-03-05T11:19:40+01:00
+date: 2021-09-13T11:19:40+01:00
 draft: false
 ---
 
