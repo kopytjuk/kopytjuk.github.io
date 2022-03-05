@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>OpenDD Analysis | Marat&#39;s blog</title>
+<meta name="keywords" content="" />
+<meta name="description" content="Contents   Introduction Dataset description  Trajectories Roundabouts Data schema   Terminology Approach  Overview Trajectory pre-processing Drivable paths Assignment of vehicle trajectories to paths    Introduction Recently, I stumbled upon the OpenDD – A Large-Scale Roundabout Drone Dataset[1] which contains about 80,000 different road users (also pedestrians) tracked over 62 hours of data across 7 roundabouts in Wolfsburg and Ingolstadt (Germany). The road users were tracked via a DJI Phantom 4, a high-end consumer drone floating over the roundabout.">
+<meta name="author" content="">
+<link rel="canonical" href="https://kopytjuk.github.io/posts/open-dd-analysis/" />
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.c88963fe2d79462000fd0fb1b3737783c32855d340583e4523343f8735c787f0.css" integrity="sha256-yIlj/i15RiAA/Q&#43;xs3N3g8MoVdNAWD5FIzQ/hzXHh/A=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.4dcb3c4f38462f66c6b6137227726f5543cb934cca9788f041c087e374491df2.js" integrity="sha256-Tcs8TzhGL2bGthNyJ3JvVUPLk0zKl4jwQcCH43RJHfI="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://kopytjuk.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://kopytjuk.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://kopytjuk.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://kopytjuk.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://kopytjuk.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.css" integrity="sha384-MlJdn/WNKDGXveldHDdyRP1R4CTHr3FeuDNfhsLPYrq2t0UBkUdK2jyTnXPEK1NQ" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.js" integrity="sha384-VQ8d8WVFw0yHhCk5E8I86oOhv48xLpnDZx5T9GogA/Y84DcCKWXDmSDfn13bzFZY" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+<meta property="og:title" content="OpenDD Analysis" />
+<meta property="og:description" content="Contents   Introduction Dataset description  Trajectories Roundabouts Data schema   Terminology Approach  Overview Trajectory pre-processing Drivable paths Assignment of vehicle trajectories to paths    Introduction Recently, I stumbled upon the OpenDD – A Large-Scale Roundabout Drone Dataset[1] which contains about 80,000 different road users (also pedestrians) tracked over 62 hours of data across 7 roundabouts in Wolfsburg and Ingolstadt (Germany). The road users were tracked via a DJI Phantom 4, a high-end consumer drone floating over the roundabout." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://kopytjuk.github.io/posts/open-dd-analysis/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-03-05T13:00:00&#43;01:00" />
+<meta property="article:modified_time" content="2022-03-05T13:00:00&#43;01:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="OpenDD Analysis"/>
+<meta name="twitter:description" content="Contents   Introduction Dataset description  Trajectories Roundabouts Data schema   Terminology Approach  Overview Trajectory pre-processing Drivable paths Assignment of vehicle trajectories to paths    Introduction Recently, I stumbled upon the OpenDD – A Large-Scale Roundabout Drone Dataset[1] which contains about 80,000 different road users (also pedestrians) tracked over 62 hours of data across 7 roundabouts in Wolfsburg and Ingolstadt (Germany). The road users were tracked via a DJI Phantom 4, a high-end consumer drone floating over the roundabout."/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://kopytjuk.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "OpenDD Analysis",
+      "item": "https://kopytjuk.github.io/posts/open-dd-analysis/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OpenDD Analysis",
+  "name": "OpenDD Analysis",
+  "description": "Contents   Introduction Dataset description  Trajectories Roundabouts Data schema   Terminology Approach  Overview Trajectory pre-processing Drivable paths Assignment of vehicle trajectories to paths    Introduction Recently, I stumbled upon the OpenDD – A Large-Scale Roundabout Drone Dataset[1] which contains about 80,000 different road users (also pedestrians) tracked over 62 hours of data across 7 roundabouts in Wolfsburg and Ingolstadt (Germany). The road users were tracked via a DJI Phantom 4, a high-end consumer drone floating over the roundabout.",
+  "keywords": [
+    
+  ],
+  "articleBody": "Contents   Introduction Dataset description  Trajectories Roundabouts Data schema   Terminology Approach  Overview Trajectory pre-processing Drivable paths Assignment of vehicle trajectories to paths    Introduction Recently, I stumbled upon the OpenDD – A Large-Scale Roundabout Drone Dataset[1] which contains about 80,000 different road users (also pedestrians) tracked over 62 hours of data across 7 roundabouts in Wolfsburg and Ingolstadt (Germany). The road users were tracked via a DJI Phantom 4, a high-end consumer drone floating over the roundabout.\nThe following visualization shows trajectories tracked in one of available recodings. The color describes the type of road user. Pedestrians are colored in red, vehicles in black, cyclists in green:\nI decided to use this dataset as a playground to sharpen my skills regarding trajectory analysis helpful in my future job. After several weeks dealing with the data, I decided to share my approach and results, in case someone faces a similar task analyzing driving trajectories.\nThis article may be of interest to people who conduct spatiotemporal trajectory analysis in Python (e.g. automated pilot evaluation) or folks just interested in traffic analysis. I’ll try to describe the approaches I use in an intuitive way and link to the GitHub repository with helpful classes and helper functions.\nThe goal I set for the analysis is to quantify drivers’ behavior in roundabouts regarding the delays and distances in moving off situations. Below (in the bottom left corner) you see a situation where the cyan vehicle moves off with a delay after the leading purple vehicle already left.\nThe following questions arise on a large collection of such situations:\n Do drivers behind a standing vehicle wait until it moves off or do they move off simultaneously? What is the average distance between the leading and following vehicle while waiting? What is the average time delay between the leading and following vehicle after the first moved off?  Dataset description Trajectories The paper attached to the dataset already provides some basic statistics about the dataset (Table II in [1]). Some interesting facts:\n Out of 84774 trajectories the vast majority (69399) were passenger cars Average velocity of all road users is around 24km/h. Busses accelerate slower (0,97 m/s²) than cars (1,49 m/s²), vans (1,39 m/s²) and trucks (1,23m/s²).  Roundabouts The 7 roundabouts within the dataset have a single driving lane in the circular sections, so no overtakes can be assumed. An overview of the seven roundabouts included in the dataset is shown in the next image[1]:\nIn addition to the bird-view images, the geometrical description of the driving lane center is provided (in UTM32N coordinates). In the following image each lane segment of roundabout rdb1 is visualized with a unique color:\nLater in the analysis, the geometrical description will be crucial to describe paths.\nData schema The video footage taken by the drone in 30fps is stabilized and rectified before it is used to detect and track all traffic participants in the given scene. Unfortunately, there are no details about the tracking method used to extract objects’ position from raw video data.\nThe trajectories captured by the tracker are provided in tabular structure. In the following table a selection of columns relevant for the analysis is presented:\n   Column(s) Description Unit     TIMESTAMP Timestamp of the given object instance. Counted from the beginning of the given recording. s   OBJID ID of the object this instance belongs to. Unique over the dataset. -   UTM_X,UTM_Y UTM 32N coordinates of the center of the object instance. m   V Velocity of the object m/s   ACC Acceleration of the object. m/s²    This is how the top 10 rows look like:\nNote, that the trajectories are not referenced to specific traffic lanes, i.e. the assignment to a particular road segment is up to the analyst.\nTerminology Later in this article I often will use the terms trajectory and path. The destinction of these two is crucial.\nFormally, a trajectory contains time-ordered set of states of a dynamical system. A trajectory can represent the position of the vehicle or its velocity over time. The time component is the main difference compared to a path. A trajectory can be represented as a path by dropping the time information.\nApproach Overview In order to introduce the notion of a following and a leading vehicle, it’s required to assign each vehicle to a particular driving path. Position and timestamp alone are not sufficient to define this relationship. The assignment to a particular path relies on the Hausdorff distance metric.\nAfter a vehicle trajectory is assigned to a particular path, it will be transformed into Frenet coordinate system, where the first coordinate represents the progress along the path and the second coordinate the distance to the center of the driving lane. As shown later, the Frenet coordinates provide a mathematically handy way to describe path-related metric distances and temporal delays between several road users.\nFurthermore, a driving state is assigned to each sample in the trajectory. A vehicle can be either in the driving or standing state. This information will be used to determine the behavior of the following vehicle in moving-off situations of the leading vehicle.\nThe approach will be structured in multiple parts. In the first part, the pre-processing of the trajectories is described. In the second part, available paths from road network description are obtained. Having both the trajectories and drivable paths, the assignment is demonstrated. Having both the trajectory and corresponding path, the transformation to the Frenet coordinates is possible. Finally, in the last part, the behavior of the leading and following vehicles is quantified.\nTrajectory pre-processing In the raw dataset the samples are loosely mixed in one single table. In order to generate trajectories, we must group by OBJID and sort by TIMESTAMP.\ndef _generate_trace(group_records: pd.DataFrame) - pd.Series:   group_records = group_records.sort_values(\"TIMESTAMP\")  x_arr = group_records[\"UTM_X\"]  y_arr = group_records[\"UTM_Y\"]  ls = LineString([(x, y) for x, y in zip(x_arr, y_arr)])   velocity = group_records[\"V\"].values  acceleration = group_records[\"ACC\"].values   first_sample = group_records.iloc[0]   # helpful metadata  objid = first_sample[\"OBJID\"]  obj_class = first_sample[\"CLASS\"]  w = first_sample[\"WIDTH\"]  l = first_sample[\"LENGTH\"]  t0 = first_sample[\"TIMESTAMP\"]   # whole trajectory in one record  s = pd.Series({  \"OBJID\": objid,  \"CLASS\": obj_class,  \"WIDTH\": w,  \"LENGTH\": l,  \"START_TIME\": t0,  \"NUM_SAMPLES\": len(x_arr),  \"V\": velocity,  \"ACC\": acceleration,  \"geometry\": ls  })  return s  # dataframe holding trajectories df_traces = df.groupby(id_column).apply(_generate_trace) Applied to the raw table, the trajectories DataFrame looks like following:\nThe paths of objects are stored in the geometry column as a Linestring instance. In addition, its velocity and acceleration are collected. They are used to determine the driving state, as shown in the snippet below.\nclass VehicleState(IntEnum):  STANDING = 0  DRIVING = 1  # identify standing if velocity and acceleration are below the thresholds states[:] = VehicleState.DRIVING.value standing_indices = (np.abs(velocity_array)  standing_vel_threshold) \u0026 \\  (np.abs(acc_array)  standing_acc_threshold) states[standing_indices] = VehicleState.STANDING.value The drive-offs are now straightforward to detect by finding the point in time, where the state changes from STANDING to DRIVING.\nIn the following figure, the velocity, acceleration and state are visualized for two example trajectories. The second vehicle stops 1s after the first vehicle has stopped (174). After a standing period of 5s, both vehicles drive off almost immediately:\nDrivable paths In this section the extraction of drivable paths from the road network is described. First, the road network will be represented as a directed graph. Second, the drivable paths are extracted with a graph-based path finding algorithm.\nThe initial road network is provided in multiple rows with corresponding road section as a linestring (as visualized in the dataset description):\nIn order to transform the data to a directed graph the momemy library is used. As stated in the docs, momepy stands for Morphological Measuring in Python.\nimport momepy  traffic_lanes_graph = momepy.gdf_to_nx(trafficlanes, approach='primal',  directed=True, multigraph=False) The gdf_to_nx function determines the graph structure solely by the course of the linestring and its starting and ending points.\nHaving the graph as networkx.classes.digraph.DiGraph the entering and leaving nodes of the road network are straightforward to retrieve:\nstart_nodes = [node for node, degree in traffic_lanes_graph.in_degree if degree == 0] end_nodes = [node for node, degree in traffic_lanes_graph.out_degree if degree == 0] Both the start and end nodes are visualized in the following figure as triangles and squares respectively:\nIn order to find all possible paths, the shortest path between each pair of starting and ending node is computed:\nfor i, (start, end) in enumerate(product(start_nodes, end_nodes)):   # find path  path = nx.shortest_path(traffic_lanes_graph, start, end)   # convert to linestring  path_as_ls = graph_path_to_linestring(traffic_lanes_graph, path)   paths.append(DrivablePath(i, path_as_ls)) In the next visualization all drivable reference paths are displayed at once:\nIn the following section it’ll be described how each vehicle trajectory is assigned to a reference path.\nAssignment of vehicle trajectories to paths In a nutshell, in order to select the corresponding path to a trajectory, a similarity metric between the trajectory and all paths is computed. The assignment is based on the minimal distance – i.e. the path with highest similarity will be selected.\nA similarity of two paths (drivable lane and vehicle’s path) can be defined in multiple ways. One solution can be to take the maximum distance between those two. A clear mathematical formulation for this problem is provided by the directed Hausdorff distance with the following formula [2]:\n$$ h(P, Q) = \\min_{p \\in P} \\max_{q \\in Q} ||p-q|| $$\nThe P denotes the vehicle’s path and Q the reference path. Note that the distance metric is not symmetric, i.e. the order of P and Q is important. The distance is implemented in scipy.spatial.distance.directed_hausdorff. Note, that shapely’s implementation computes the undirected Hausdorff distance which is not suitable for this problem.\n",
+  "wordCount" : "1580",
+  "inLanguage": "en",
+  "datePublished": "2022-03-05T13:00:00+01:00",
+  "dateModified": "2022-03-05T13:00:00+01:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://kopytjuk.github.io/posts/open-dd-analysis/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Marat's blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://kopytjuk.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://kopytjuk.github.io/" accesskey="h" title="Marat&#39;s blog (Alt + H)">Marat&#39;s blog</a>
+            <span class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title">
+      OpenDD Analysis<sup><span class="entry-isdraft">&nbsp;&nbsp;[draft]</span></sup>
+    </h1>
+    <div class="post-meta"><span title='2022-03-05 13:00:00 +0100 CET'>March 5, 2022</span>
+
+</div>
+  </header> 
+  <div class="post-content"><!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<h2 id="contents----omit-in-toc---">Contents <!-- raw HTML omitted --><a hidden class="anchor" aria-hidden="true" href="#contents----omit-in-toc---">#</a></h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#dataset-description">Dataset description</a>
+<ul>
+<li><a href="#trajectories">Trajectories</a></li>
+<li><a href="#roundabouts">Roundabouts</a></li>
+<li><a href="#data-schema">Data schema</a></li>
+</ul>
+</li>
+<li><a href="#terminology">Terminology</a></li>
+<li><a href="#approach">Approach</a>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#trajectory-pre-processing">Trajectory pre-processing</a></li>
+<li><a href="#drivable-paths">Drivable paths</a></li>
+<li><a href="#assignment-of-vehicle-trajectories-to-paths">Assignment of vehicle trajectories to paths</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>Recently, I stumbled upon the <em>OpenDD – A Large-Scale Roundabout Drone Dataset</em>[1] which contains about 80,000 different road users (also pedestrians) tracked over 62 hours of data across 7 roundabouts in Wolfsburg and Ingolstadt (Germany). The road users were tracked via a DJI Phantom 4, a high-end consumer drone floating over the roundabout.</p>
+<p>The following visualization shows trajectories tracked in one of available recodings. The color describes the type of road user. Pedestrians are colored in red, vehicles in black, cyclists in green:</p>
+<p><img loading="lazy" src="rdb1_4.jpg" alt="rdb1_4"  />
+</p>
+<p>I decided to use this dataset as a playground to sharpen my skills regarding trajectory analysis helpful in my future job. After several weeks dealing with the data, I decided to share my approach and results, in case someone faces a similar task analyzing driving trajectories.</p>
+<p>This article may be of interest to people who conduct spatiotemporal trajectory analysis in Python (e.g. automated pilot evaluation) or folks just interested in traffic analysis. I’ll try to describe the approaches I use in an intuitive way and link to the GitHub repository with helpful classes and helper functions.</p>
+<p>The goal I set for the analysis is to quantify drivers’ behavior in roundabouts regarding the delays and distances in moving off situations. Below (in the bottom left corner) you see a situation where the cyan vehicle moves off with a delay after the leading purple vehicle already left.</p>
+<p><img loading="lazy" src="moving-off.gif" alt="moving-off"  />
+</p>
+<p>The following questions arise on a large collection of such situations:</p>
+<ul>
+<li>Do drivers behind a standing vehicle wait until it moves off or do they move off simultaneously?</li>
+<li>What is the average distance between the leading and following vehicle while waiting?</li>
+<li>What is the average time delay between the leading and following vehicle after the first moved off?</li>
+</ul>
+<h2 id="dataset-description">Dataset description<a hidden class="anchor" aria-hidden="true" href="#dataset-description">#</a></h2>
+<h3 id="trajectories">Trajectories<a hidden class="anchor" aria-hidden="true" href="#trajectories">#</a></h3>
+<p>The paper attached to the dataset already provides some basic statistics about the dataset (Table II in [1]). Some interesting facts:</p>
+<ul>
+<li>Out of 84774 trajectories the vast majority (69399) were passenger cars</li>
+<li>Average velocity of all road users is around 24km/h.</li>
+<li>Busses accelerate slower (0,97 m/s²) than cars (1,49 m/s²), vans (1,39 m/s²) and trucks (1,23m/s²).</li>
+</ul>
+<h3 id="roundabouts">Roundabouts<a hidden class="anchor" aria-hidden="true" href="#roundabouts">#</a></h3>
+<p>The 7 roundabouts within the dataset have a single driving lane in the circular sections, so no overtakes can be assumed. An overview of the seven roundabouts included in the dataset is shown in the next image[1]:</p>
+<p><img loading="lazy" src="roundabouts.png" alt="roundabouts"  />
+</p>
+<p>In addition to the bird-view images, the geometrical description of the driving lane center is provided (in UTM32N coordinates). In the following image each lane segment of roundabout <code>rdb1</code> is visualized with a unique color:</p>
+<p><img loading="lazy" src="rdb1-trafficlanes.png" alt="rdb1-trafficlanes"  />
+</p>
+<p>Later in the analysis, the geometrical description will be crucial to describe paths.</p>
+<h3 id="data-schema">Data schema<a hidden class="anchor" aria-hidden="true" href="#data-schema">#</a></h3>
+<p>The video footage taken by the drone in 30fps is stabilized and rectified before it is used to detect and track all traffic participants in the given scene. Unfortunately, there are no details about the tracking method used to extract objects’ position from raw video data.</p>
+<p>The trajectories captured by the tracker are provided in tabular structure. In the following table a selection of columns relevant for the analysis is presented:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Column(s)</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Unit</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TIMESTAMP</code></td>
+<td>Timestamp of the given object instance. Counted from the beginning of the given recording.</td>
+<td>s</td>
+</tr>
+<tr>
+<td><code>OBJID</code></td>
+<td>ID of the object this instance belongs to. Unique over the dataset.</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>UTM_X</code>,<code>UTM_Y</code></td>
+<td>UTM 32N coordinates of the center of the object instance.</td>
+<td>m</td>
+</tr>
+<tr>
+<td><code>V</code></td>
+<td>Velocity of the object</td>
+<td>m/s</td>
+</tr>
+<tr>
+<td><code>ACC</code></td>
+<td>Acceleration of the object.</td>
+<td>m/s²</td>
+</tr>
+</tbody>
+</table>
+<p>This is how the top 10 rows look like:</p>
+<p><img loading="lazy" src="db-first-10.png" alt="db-first-10"  />
+</p>
+<p>Note, that the trajectories are not referenced to specific traffic lanes, i.e. the assignment to a particular road segment is up to the analyst.</p>
+<h2 id="terminology">Terminology<a hidden class="anchor" aria-hidden="true" href="#terminology">#</a></h2>
+<p>Later in this article I often will use the terms <em>trajectory</em> and <em>path</em>. The destinction of these two is crucial.</p>
+<p>Formally, a <strong>trajectory</strong> contains time-ordered set of states of a dynamical system. A trajectory can represent the position of the vehicle or its velocity over time. The time component is the main difference compared to a <strong>path</strong>. A trajectory can be represented as a path by dropping the time information.</p>
+<h2 id="approach">Approach<a hidden class="anchor" aria-hidden="true" href="#approach">#</a></h2>
+<h3 id="overview">Overview<a hidden class="anchor" aria-hidden="true" href="#overview">#</a></h3>
+<p>In order to introduce the notion of a following and a leading vehicle, it’s required to assign each vehicle to a particular driving path. Position and timestamp alone are not sufficient to define this relationship. The assignment to a particular path relies on the <em>Hausdorff</em> distance metric.</p>
+<p>After a vehicle trajectory is assigned to a particular path, it will be transformed into Frenet coordinate system, where the first coordinate represents the progress along the path and the second coordinate the distance to the center of the driving lane. As shown later, the Frenet coordinates provide a mathematically handy way to describe path-related metric distances and temporal delays between several road users.</p>
+<p>Furthermore, a driving state is assigned to each sample in the trajectory. A vehicle can be either in the driving or standing state. This information will be used to determine the behavior of the following vehicle in moving-off situations of the leading vehicle.</p>
+<p>The approach will be structured in multiple parts. In the first part, the pre-processing of the trajectories is described. In the second part, available paths from road network description are obtained. Having both the trajectories and drivable paths, the assignment is demonstrated. Having both the trajectory and corresponding path, the transformation to the Frenet coordinates is possible. Finally, in the last part, the behavior of the leading and following vehicles is quantified.</p>
+<h3 id="trajectory-pre-processing">Trajectory pre-processing<a hidden class="anchor" aria-hidden="true" href="#trajectory-pre-processing">#</a></h3>
+<p>In the raw dataset the samples are loosely mixed in one single table. In order to generate trajectories, we must group by <code>OBJID</code> and sort by <code>TIMESTAMP</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_generate_trace</span>(group_records: pd<span style="color:#f92672">.</span>DataFrame) <span style="color:#f92672">-&gt;</span> pd<span style="color:#f92672">.</span>Series:
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    group_records <span style="color:#f92672">=</span> group_records<span style="color:#f92672">.</span>sort_values(<span style="color:#e6db74">&#34;TIMESTAMP&#34;</span>)
+</span></span><span style="display:flex;"><span>    x_arr <span style="color:#f92672">=</span> group_records[<span style="color:#e6db74">&#34;UTM_X&#34;</span>]
+</span></span><span style="display:flex;"><span>    y_arr <span style="color:#f92672">=</span> group_records[<span style="color:#e6db74">&#34;UTM_Y&#34;</span>]
+</span></span><span style="display:flex;"><span>    ls <span style="color:#f92672">=</span> LineString([(x, y) <span style="color:#66d9ef">for</span> x, y <span style="color:#f92672">in</span> zip(x_arr, y_arr)])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    velocity <span style="color:#f92672">=</span> group_records[<span style="color:#e6db74">&#34;V&#34;</span>]<span style="color:#f92672">.</span>values
+</span></span><span style="display:flex;"><span>    acceleration <span style="color:#f92672">=</span> group_records[<span style="color:#e6db74">&#34;ACC&#34;</span>]<span style="color:#f92672">.</span>values
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    first_sample <span style="color:#f92672">=</span> group_records<span style="color:#f92672">.</span>iloc[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># helpful metadata</span>
+</span></span><span style="display:flex;"><span>    objid <span style="color:#f92672">=</span> first_sample[<span style="color:#e6db74">&#34;OBJID&#34;</span>]
+</span></span><span style="display:flex;"><span>    obj_class <span style="color:#f92672">=</span> first_sample[<span style="color:#e6db74">&#34;CLASS&#34;</span>]
+</span></span><span style="display:flex;"><span>    w <span style="color:#f92672">=</span> first_sample[<span style="color:#e6db74">&#34;WIDTH&#34;</span>]
+</span></span><span style="display:flex;"><span>    l <span style="color:#f92672">=</span> first_sample[<span style="color:#e6db74">&#34;LENGTH&#34;</span>]
+</span></span><span style="display:flex;"><span>    t0 <span style="color:#f92672">=</span> first_sample[<span style="color:#e6db74">&#34;TIMESTAMP&#34;</span>]
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># whole trajectory in one record</span>
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> pd<span style="color:#f92672">.</span>Series({
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;OBJID&#34;</span>: objid,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;CLASS&#34;</span>: obj_class,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;WIDTH&#34;</span>: w,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;LENGTH&#34;</span>: l,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;START_TIME&#34;</span>: t0,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;NUM_SAMPLES&#34;</span>: len(x_arr),
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;V&#34;</span>: velocity,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;ACC&#34;</span>: acceleration,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;geometry&#34;</span>: ls
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> s
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dataframe holding trajectories</span>
+</span></span><span style="display:flex;"><span>df_traces <span style="color:#f92672">=</span> df<span style="color:#f92672">.</span>groupby(id_column)<span style="color:#f92672">.</span>apply(_generate_trace)
+</span></span></code></pre></div><p>Applied to the raw table, the trajectories DataFrame looks like following:</p>
+<p><img loading="lazy" src="trajectories-dataframe.png" alt="trajectories-dataframe"  />
+</p>
+<p>The paths of objects are stored in the <code>geometry</code> column as a <code>Linestring</code> instance. In addition, its velocity and acceleration are collected. They are used to determine the driving state, as shown in the snippet below.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">VehicleState</span>(IntEnum):
+</span></span><span style="display:flex;"><span>    STANDING <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    DRIVING <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># identify standing if velocity and acceleration are below the thresholds</span>
+</span></span><span style="display:flex;"><span>states[:] <span style="color:#f92672">=</span> VehicleState<span style="color:#f92672">.</span>DRIVING<span style="color:#f92672">.</span>value
+</span></span><span style="display:flex;"><span>standing_indices <span style="color:#f92672">=</span> (np<span style="color:#f92672">.</span>abs(velocity_array) <span style="color:#f92672">&lt;</span> standing_vel_threshold) <span style="color:#f92672">&amp;</span> \
+</span></span><span style="display:flex;"><span>    (np<span style="color:#f92672">.</span>abs(acc_array) <span style="color:#f92672">&lt;</span> standing_acc_threshold)
+</span></span><span style="display:flex;"><span>states[standing_indices] <span style="color:#f92672">=</span> VehicleState<span style="color:#f92672">.</span>STANDING<span style="color:#f92672">.</span>value
+</span></span></code></pre></div><p>The drive-offs are now straightforward to detect by finding the point in time, where the state changes from <code>STANDING</code> to <code>DRIVING</code>.</p>
+<p>In the following figure, the velocity, acceleration and state are visualized for two example trajectories. The second vehicle stops 1s after the first vehicle has stopped (174). After a standing period of 5s, both vehicles drive off almost immediately:</p>
+<p><img loading="lazy" src="move-off-timeseries.png" alt="move-off-timeseries"  />
+</p>
+<h3 id="drivable-paths">Drivable paths<a hidden class="anchor" aria-hidden="true" href="#drivable-paths">#</a></h3>
+<p>In this section the extraction of drivable paths from the road network is described. First, the road network will be represented as a <em>directed graph</em>. Second, the drivable paths are extracted with a graph-based path finding algorithm.</p>
+<p>The initial road network is provided in multiple rows with corresponding road section as a linestring (as visualized in the dataset description):</p>
+<p><img loading="lazy" src="trafficlanes-dataframe.png" alt="trafficlanes-dataframe"  />
+</p>
+<p>In order to transform the data to a directed graph the <code>momemy</code> library is used. As stated in the docs, momepy stands for Morphological Measuring in Python.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> momepy
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>traffic_lanes_graph <span style="color:#f92672">=</span> momepy<span style="color:#f92672">.</span>gdf_to_nx(trafficlanes, approach<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;primal&#39;</span>,  
+</span></span><span style="display:flex;"><span>    directed<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>, multigraph<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>)
+</span></span></code></pre></div><p>The <code>gdf_to_nx</code> function determines the graph structure solely by the course of the linestring and its starting and ending points.</p>
+<p>Having the graph as <code>networkx.classes.digraph.DiGraph</code> the entering and leaving nodes of the road network are straightforward to retrieve:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>start_nodes <span style="color:#f92672">=</span> [node <span style="color:#66d9ef">for</span> node, degree <span style="color:#f92672">in</span> traffic_lanes_graph<span style="color:#f92672">.</span>in_degree <span style="color:#66d9ef">if</span> degree <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>end_nodes <span style="color:#f92672">=</span> [node <span style="color:#66d9ef">for</span> node, degree <span style="color:#f92672">in</span> traffic_lanes_graph<span style="color:#f92672">.</span>out_degree <span style="color:#66d9ef">if</span> degree <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>]
+</span></span></code></pre></div><p>Both the start and end nodes are visualized in the following figure as triangles and squares respectively:</p>
+<p><img loading="lazy" src="road-graph-start-end-nodes.png" alt="road-graph-start-end-nodes"  />
+</p>
+<p>In order to find all possible paths, the shortest path between each pair of starting and ending node is computed:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i, (start, end) <span style="color:#f92672">in</span> enumerate(product(start_nodes, end_nodes)):
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># find path</span>
+</span></span><span style="display:flex;"><span>    path <span style="color:#f92672">=</span> nx<span style="color:#f92672">.</span>shortest_path(traffic_lanes_graph, start, end)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># convert to linestring</span>
+</span></span><span style="display:flex;"><span>    path_as_ls <span style="color:#f92672">=</span> graph_path_to_linestring(traffic_lanes_graph, path)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    paths<span style="color:#f92672">.</span>append(DrivablePath(i, path_as_ls))
+</span></span></code></pre></div><p>In the next visualization all drivable reference paths are displayed at once:</p>
+<p><img loading="lazy" src="driving-paths.png" alt="driving-paths"  />
+</p>
+<p>In the following section it&rsquo;ll be described how each vehicle trajectory is assigned to a reference path.</p>
+<h3 id="assignment-of-vehicle-trajectories-to-paths">Assignment of vehicle trajectories to paths<a hidden class="anchor" aria-hidden="true" href="#assignment-of-vehicle-trajectories-to-paths">#</a></h3>
+<p>In a nutshell, in order to select the corresponding path to a trajectory, a similarity metric between the trajectory and all paths is computed. The assignment is based on the minimal distance – i.e. the path with highest similarity will be selected.</p>
+<p>A similarity of two paths (drivable lane and vehicle’s path) can be defined in multiple ways. One solution can be to take the maximum distance between those two. A clear mathematical formulation for this problem is provided by the <em>directed Hausdorff distance</em> with the following formula [2]:</p>
+<p>$$
+h(P, Q) = \min_{p \in P} \max_{q \in Q} ||p-q||
+$$</p>
+<p>The P denotes the vehicle’s path and Q the reference path. Note that the distance metric is not symmetric, i.e. the order of P and Q is important. The distance is implemented in <code>scipy.spatial.distance.directed_hausdorff</code>. Note, that <code>shapely</code>’s implementation computes the undirected Hausdorff distance which is not suitable for this problem.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2022 <a href="https://kopytjuk.github.io/">Marat&#39;s blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://git.io/hugopapermod" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>
