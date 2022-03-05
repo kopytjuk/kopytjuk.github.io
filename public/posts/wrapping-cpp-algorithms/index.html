@@ -9,15 +9,15 @@
 <meta name="keywords" content="" />
 <meta name="description" content="TLDR; In model based design paradigm one often implements a proof-of-concept solution in a scripting language before porting the logic to a more performant low-level language like C/C&#43;&#43;. This article describes the benefits of calling production-ready (C/C&#43;&#43;) ports in Python for functional evaluation and analysis. Assessment tools developed previously during the experimentation stage can be reused. Furthermore, the complexity for experimentation with various internal parameters is reduced, which can optimize costs and expensive debugging prior to the final deployment.">
 <meta name="author" content="">
-<link rel="canonical" href="https://kopytjuk.github.io/kopytjuk/posts/wrapping-cpp-algorithms/" />
-<link crossorigin="anonymous" href="/kopytjuk/assets/css/stylesheet.min.c88963fe2d79462000fd0fb1b3737783c32855d340583e4523343f8735c787f0.css" integrity="sha256-yIlj/i15RiAA/Q&#43;xs3N3g8MoVdNAWD5FIzQ/hzXHh/A=" rel="preload stylesheet" as="style">
-<script defer crossorigin="anonymous" src="/kopytjuk/assets/js/highlight.min.4dcb3c4f38462f66c6b6137227726f5543cb934cca9788f041c087e374491df2.js" integrity="sha256-Tcs8TzhGL2bGthNyJ3JvVUPLk0zKl4jwQcCH43RJHfI="
+<link rel="canonical" href="https://kopytjuk.github.io/posts/wrapping-cpp-algorithms/" />
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.c88963fe2d79462000fd0fb1b3737783c32855d340583e4523343f8735c787f0.css" integrity="sha256-yIlj/i15RiAA/Q&#43;xs3N3g8MoVdNAWD5FIzQ/hzXHh/A=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.4dcb3c4f38462f66c6b6137227726f5543cb934cca9788f041c087e374491df2.js" integrity="sha256-Tcs8TzhGL2bGthNyJ3JvVUPLk0zKl4jwQcCH43RJHfI="
     onload="hljs.initHighlightingOnLoad();"></script>
-<link rel="icon" href="https://kopytjuk.github.io/kopytjuk/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="https://kopytjuk.github.io/kopytjuk/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="https://kopytjuk.github.io/kopytjuk/favicon-32x32.png">
-<link rel="apple-touch-icon" href="https://kopytjuk.github.io/kopytjuk/apple-touch-icon.png">
-<link rel="mask-icon" href="https://kopytjuk.github.io/kopytjuk/safari-pinned-tab.svg">
+<link rel="icon" href="https://kopytjuk.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://kopytjuk.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://kopytjuk.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://kopytjuk.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://kopytjuk.github.io/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
 <noscript>
@@ -59,7 +59,7 @@
 </noscript><meta property="og:title" content="Wrap C&#43;&#43; algorithms in Python for pre-production evaluation and experimentation." />
 <meta property="og:description" content="TLDR; In model based design paradigm one often implements a proof-of-concept solution in a scripting language before porting the logic to a more performant low-level language like C/C&#43;&#43;. This article describes the benefits of calling production-ready (C/C&#43;&#43;) ports in Python for functional evaluation and analysis. Assessment tools developed previously during the experimentation stage can be reused. Furthermore, the complexity for experimentation with various internal parameters is reduced, which can optimize costs and expensive debugging prior to the final deployment." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://kopytjuk.github.io/kopytjuk/posts/wrapping-cpp-algorithms/" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://kopytjuk.github.io/posts/wrapping-cpp-algorithms/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2022-03-05T11:19:40&#43;01:00" />
 <meta property="article:modified_time" content="2022-03-05T11:19:40&#43;01:00" />
 
@@ -72,18 +72,18 @@
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
-  "itemListElement": [, 
+  "itemListElement": [
     {
       "@type": "ListItem",
-      "position":  2 ,
+      "position":  1 ,
       "name": "Posts",
-      "item": "https://kopytjuk.github.io/kopytjuk/posts/"
+      "item": "https://kopytjuk.github.io/posts/"
     }, 
     {
       "@type": "ListItem",
-      "position":  3 ,
+      "position":  2 ,
       "name": "Wrap C++ algorithms in Python for pre-production evaluation and experimentation.",
-      "item": "https://kopytjuk.github.io/kopytjuk/posts/wrapping-cpp-algorithms/"
+      "item": "https://kopytjuk.github.io/posts/wrapping-cpp-algorithms/"
     }
   ]
 }
@@ -105,14 +105,14 @@
   "dateModified": "2022-03-05T11:19:40+01:00",
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://kopytjuk.github.io/kopytjuk/posts/wrapping-cpp-algorithms/"
+    "@id": "https://kopytjuk.github.io/posts/wrapping-cpp-algorithms/"
   },
   "publisher": {
     "@type": "Organization",
     "name": "Marat's blog",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://kopytjuk.github.io/kopytjuk/favicon.ico"
+      "url": "https://kopytjuk.github.io/favicon.ico"
     }
   }
 }
@@ -134,7 +134,7 @@
 <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="https://kopytjuk.github.io/kopytjuk" accesskey="h" title="Marat&#39;s blog (Alt + H)">Marat&#39;s blog</a>
+            <a href="https://kopytjuk.github.io/" accesskey="h" title="Marat&#39;s blog (Alt + H)">Marat&#39;s blog</a>
             <span class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)">
                     <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -344,7 +344,7 @@ This article describes the benefits of calling production-ready (C/C++) ports in
     </main>
     
 <footer class="footer">
-    <span>&copy; 2022 <a href="https://kopytjuk.github.io/kopytjuk">Marat&#39;s blog</a></span>
+    <span>&copy; 2022 <a href="https://kopytjuk.github.io/">Marat&#39;s blog</a></span>
     <span>
         Powered by
         <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
