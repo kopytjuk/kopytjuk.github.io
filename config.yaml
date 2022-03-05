@@ -1,0 +1,27 @@
+baseURL: "https://kopytjuk.github.io/"
+languageCode: "en-us"
+title: "Marat's blog"
+theme: "PaperMod"
+
+params:
+    profileMode:
+        enabled: true
+        title: "<Title>" # optional default will be site title
+        subtitle: "R&D Engineer"
+        imageUrl: "/about/me.jpg" # optional
+        imageTitle: "<title of image as alt>" # optional
+        imageWidth: 140 # custom size
+        imageHeight: 140 # custom size
+        buttons:
+            - name: About
+              url: "/about"
+            - name: Blog
+              url: "/posts"
+
+    socialIcons: # optional
+        - name: github
+          url: "https://github.com/kopytjuk"
+        - name: linkedIn
+          url: "https://www.linkedin.com/in/kopytjuk/"
+        - name: instagram
+          url: "https://www.instagram.com/marat_kopytjuk/"
