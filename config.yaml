@@ -7,7 +7,7 @@ params:
     profileMode:
         enabled: true
         title: "<Title>" # optional default will be site title
-        subtitle: "R&D Engineer"
+        subtitle: "R&D Engineer with passion to Python and Automated Driving"
         imageUrl: "/about/me.jpg" # optional
         imageTitle: "<title of image as alt>" # optional
         imageWidth: 140 # custom size
