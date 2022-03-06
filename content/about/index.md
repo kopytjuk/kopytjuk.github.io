@@ -2,7 +2,7 @@
 title: "About"
 ---
 
-My name is Marat, I am born in the early 90's, work and live in Heilbronn (South Germany). I was born in Belarus, got my mechatronics degree in Germany. My mother language is Russian, but over the time the available vocabulary in German and English got more advanced.
+My name is Marat, I was born in the early 90's in Witebsk (Belarus), currently work and live in Heilbronn (South Germany). I studied mechatronics for Bachelor. and automated driving for Masters degree. My mother language is Russian, but over the time the available vocabulary in German and English got more advanced.
 
 I count myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and probability theory is essential towards inspiring, efficient, future-proof and reliable products.
 
@@ -26,4 +26,5 @@ My previous experiences which shaped my horizon:
 - Gitlab CI/CD pipelines involing Docker and `pytest` (2018-now)
 - [Frenét-frame trajectory planner](https://ieeexplore.ieee.org/document/5509799?arnumber=5509799) integration from `MATLAB` to ROS2 in C++ (2020)
 - Wrapping C++ routines to use in Python with [`pybind11`](https://github.com/pybind/pybind11) (2021)
-- Small open source contributions to `opencv`, `tensorflow`, `matplotlib` and `bokeh` (2018-now)
+- Small open source contributions to `opencv`, `tensorflow`, `matplotlib` and `bokeh` (2018-now), see [github](https://github.com/pulls?q=is%3Apr+author%3Akopytjuk+archived%3Afalse+is%3Aclosed)
+- Various blogs, refer to [Blog](../posts/)

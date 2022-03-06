@@ -1,27 +1,15 @@
 ---
-title: "OpenDD Analysis"
-date: 2022-03-05T13:00:00+01:00
-draft: true
+title: "Vehicle trajectory analysis in Frenet-Serret coordinates on the Large-Scale Roundabout Drone Dataset (OpenDD)"
+date: 2022-03-06T12:00:00+01:00
+draft: false
 math: true
 ---
 
-<script type="text/javascript"
-src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
+![title](title.png)
 
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  tex2jax: {
-     inlineMath: [['$','$'], ['\\(','\\)']],
-     displayMath: [['$$','$$']],
-     processEscapes: true,
-     processEnvironments: true,
-     skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-     TeX: { equationNumbers: { autoNumber: "AMS" },
-            extensions: ["AMSmath.js", "AMSsymbols.js"] }
-  }
-});
-</script>
+## TL;DR; <!-- omit in toc -->
+
+This blog posts presents the of Frenet-Serret coordinate system for driving trajectory analysis. This system is defined by a reference path, such as a driving lane. As an showcase example, the delay times and distances between vehicles in a roundabout setting are analyzed. The trajectories recorded in the OpenDD dataset are used. In the end of the post, the reader will understand the benefits of Frenet-Serret frames compared to a conventional metric approach when it comes to trajectory analysis in a real world setting. Moreover, you will have a handy mathematical tool to detect tipsy drivers!
 
 ## Contents <!-- omit in toc -->
 
@@ -41,7 +29,7 @@ MathJax.Hub.Config({
 - [Results](#results)
   - [Behaviour of the following vehicles](#behaviour-of-the-following-vehicles)
   - [Delay](#delay)
-  - [WIP: Distance](#wip-distance)
+  - [Distance](#distance)
 - [Summary & outlook](#summary--outlook)
 - [References](#references)
 
@@ -318,7 +306,7 @@ class DiscreteReferencePath:
         return s,  d
 ```
 
-The points `np.ndarray` holds the (cartesian) locations of points along the arc length $s$. In order to transform any cartesian coordinate $c$ to the Frenet system, the closest point on the reference path with an arc length $s'$, $r(s')$ is taken. The corresponding arc length $s'$ and Euclidean distance between $c$ and $r(s')$ both are the resulting Frenet coordinates. This is implemented in the `to_frenet()` method.
+The points `np.ndarray` holds the (cartesian) locations of points along the arc length $s$. In order to transform any cartesian coordinate $c$ to the Frenet system, the closest point on the reference path with an arc length $s^{c}$, $r(s^{c})$ is taken. The corresponding arc length $s^c$ and Euclidean distance between $c$ and $r(s^c)$ both are the resulting Frenet coordinates. This is implemented in the `to_frenet()` method.
 
 Note, that the spatial resolution of the arc length affects the accuracy, i.e. a sparsely sampled reference curve will lead to atypical trajectories in Frenet space.
 
@@ -326,11 +314,35 @@ After transforming all available vehicle trajectories to Frenet space, it is pos
 
 ![trajs-on-path3](trajs-on-path3.png)
 
-The higher the slope the faster the vehicle, horizontal time periods indicate that a vehicle does not move. In this visualization it is easy to find the distances between the vehicles at a particular point in time. For example at 210s a distance of 10m for both standing vehicles can be observed.
+The higher the slope the faster the vehicle, horizontal time periods indicate that a vehicle does not move. In this visualization it is easy to find the distances between the vehicles at a particular point in time. For example, at $t=210s$ a distance of $\approx 10m$ for both vehicles (IDs `124` and `126`) can be observed.
 
 ### Behaviour analysis
 
-Assuming no overtakes are possible, which is valid in a single-lane roundabout, let's iterate over each pair of trajectories and record both the distances and the states of the follower vehicle at points in time, where the leading vehicle moves off. As a result, a table containing all moving-off situations is created with corresponding vehicle IDs, distances, delays, and states (here first 5 rows are show):
+Assuming no overtakes are possible, which is valid in a single-lane roundabout, let's iterate over each pair of trajectories and record both the distances and states of the follower vehicle at particular points in time, where the leading vehicle moves off. This logic is implemeted in `analyze_driveoffs_from_path()` routine in [3].
+
+We encapsulate found events as a datastructure:
+
+```python
+@dataclass
+class DriveOffSituation:
+    """Analysis artifact representing a moving-off situation
+    """
+    
+    # vehicle IDs
+    o1_id: int  # leading
+    o2_id: int  # following
+    
+    t: float  # time of the event
+    
+    distance: float  # distance between the objects
+    
+    # O2 properties
+    o2_state: VehicleState
+    o2_timedelta_drive_off: Optional[float] 
+    o2_velocity: float
+```
+
+As a result, a table containing all moving-off situations is created with corresponding vehicle IDs, distances, delays, and states (here first 5 rows are show):
 
 ![move-off-results-table](move-off-results-table.png)
 
@@ -347,21 +359,23 @@ This effect can be similar to daily observation behind a traffic light – the f
 
 ### Delay
 
-The second aspect focuses on the time the second vehicle needs to move off after the first left. From the distribution it can be derived, that the majority needs a little more than a second. This number confirms the results from [3], where the reaction time for expected stimulus while driving is around 1s as well.
+The second aspect focuses on the time the second vehicle needs to move off after the first left. From the distribution it can be derived, that the majority needs a little more than a second. This number confirms the results from [3], where the reaction time for expected stimulus while driving is around $1s$ as well.
 
 ![results-delay-all](results-delay-all.png)
 
-### WIP: Distance
+### Distance
 
-Lastly, the distance between the vehicles while waiting will be analysed. An average distance slightly below 2 meters can be observed:
+Lastly, the distance between the vehicles while waiting shall be analyzed. An average distance slightly below 2 meters can be observed:
+
+![results-distance-all](results-distance-all.png)
 
 ## Summary & outlook
 
 This blog post demonstrates the advantage of Frenet coordinates for traffic trajectory analysis. This representation maps the locations relative to the reference path (e.g. driving lane) instead of a location in 2D plane.
 
-So far in this post, only a “simple” situation type is covered – the delay and distance analysis between two vehicles. In a nutshell, the analysis confirms the general assumptions about the reaction time of about 1s (including the car’s response delay). In addition, a statistic about the average distance between two waiting vehicles shows a value of 2m. Against my personal expectations, most people already move off slowly even before the front vehicle starts moving.
+So far in this post, only a “simple” situation type is covered – the delay and distance analysis between two vehicles. In a nutshell, the analysis confirms the general assumption regarding the delay time of approx. $1s$. In addition, a statistic about the average distance between two waiting vehicles shows a value of $2m$. Against my personal expectations, the majority of drivers already move off slowly even before the front vehicle starts moving.
 
-The Frenet representation allows more complex analyses such as overtaking manoeuvre quantification, alcohol detection (by detecting waves in the $d$-component (normal) of the Frenet representation), illegal line changes (considering the lane-types) or jerk analysis regarding the driving comfort. All those use-cases require a less complex logic within the Frenet framework  than a conventional Euclidean representation. 
+The Frenet-Serret frame allows far more complex analyses such as overtaking manoeuver quantification, alcohol detection (by detecting fluctuations in the $d$-component of the Frenet representation), illegal line changes (considering the lane-types) or jerk analysis regarding the driving comfort. All those use-cases require a less complex logic within the Frenet framework  than a conventional Euclidean representation.
 
 ## References
 
@@ -370,3 +384,5 @@ The Frenet representation allows more complex analyses such as overtaking manoeu
 [2] A. A. Taha and A. Hanbury, *An Efficient Algorithm for Calculating the Exact Hausdorff Distance*, IEEE Transactions on Pattern Analysis and Machine Intelligence, November 2015.
 
 [3] Paweł Droździel, *Drivers ’reaction time research in the conditions in the real traffic*, Open Engineering, 2020. 
+
+[4] https://github.com/kopytjuk/opendd-analysis
