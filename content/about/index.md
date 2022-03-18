@@ -6,7 +6,7 @@ My name is Marat, I was born in the early 90's in Witebsk (Belarus), currently w
 
 I count myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and probability theory is essential towards inspiring, efficient, future-proof and reliable products.
 
-I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `scipy` and `pandas`) for my professional and hobby projects.
+I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `scipy` and `pandas`) both for my professional and hobby projects.
 
 ## Projects
 
@@ -27,4 +27,4 @@ My previous experiences which shaped my horizon:
 - [Frenét-frame trajectory planner](https://ieeexplore.ieee.org/document/5509799?arnumber=5509799) integration from `MATLAB` to ROS2 in C++ (2020)
 - Wrapping C++ routines to use in Python with [`pybind11`](https://github.com/pybind/pybind11) (2021)
 - Small open source contributions to `opencv`, `tensorflow`, `matplotlib` and `bokeh` (2018-now), see [github](https://github.com/pulls?q=is%3Apr+author%3Akopytjuk+archived%3Afalse+is%3Aclosed)
-- Various blogs, refer to [Blog](../posts/)
+- Various blogs, refer to [Posts](../posts/)
