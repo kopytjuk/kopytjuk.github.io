@@ -9,7 +9,7 @@ math: true
 
 ## TL;DR; <!-- omit in toc -->
 
-This blog post presents the use of Frenet-Serret coordinate system for driving trajectory analysis (in Python). This system is defined by a reference path, such as a driving lane. As an showcase example, the delay times and distances between vehicles in a roundabout setting are analyzed. The trajectories recorded in the OpenDD dataset are used. In the end of the post, the reader will understand the benefits of Frenet-Serret frames compared to a conventional metric approach when it comes to trajectory analysis in a real-world setting. Moreover, you will have a handy mathematical tool to detect tipsy drivers!
+This blog post presents the benefits of Frenet-Serret coordinate system for driving trajectory analysis (in Python). This system is defined by a reference path, such as a driving lane and facilitates traffic analysis. As an showcase example, the delay times and distances between vehicles in a roundabout setting are analyzed. The trajectories captured from a bird-view perspective (DJI drone) from the OpenDD dataset are used. In the end of the post, the reader will value the advantages of Frenet-Serret frames compared to a conventional metric approach when it comes to trajectory analysis in a real-world setting. Moreover, you will have a handy mathematical tool to detect tipsy drivers!
 
 ## Contents <!-- omit in toc -->
 
