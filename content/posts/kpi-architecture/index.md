@@ -13,7 +13,7 @@ In this post I will describe a software archecture which proved one's worth acro
 
 ## Basics
 
-For the sake of better unterstanding, I'll introduce an artificial setting which helps to internalize the proposed concept. Let's stick with the logistics domain and focus on a mobile robot picking and delivering small boxes in a production site. This warehouse is also filled with employees, pallet trucks and other moving objects.
+For the sake of better unterstanding, I'll introduce an artificial setting which helps to internalize the proposed concept. Let's stick with the logistics domain and focus on a mobile robot picking and delivering small boxes in a production site. This warehouse is also filled with employees, pallet trucks and other moving objects which are to detect and to avoid.
 
 ![audi-smart-factory](audi-smart-factory.jpg)
 
@@ -27,16 +27,63 @@ The system's output, the resampled version and the corresponding ground truth ca
 
 ![discrete-timeseries](discrete-timeseries.png)
 
-### Data format examples
+### Evaluation schemes
 
-In the initial example, the system's output can be it's perceived position which has to be compared with it's actual position.
+In this section a collection of various metrics and visualizations is outlined to motivate the need for an extensible, application-independent evaluation tooling.
 
+#### Example 1: Localization
 
-Another interesting assessment can be whether the system is detecting all humans in it's perception field.
+In the first example, the system's output can be its perceived position which has to be compared with it's actual position (with heading):
 
-### Evaluation metrics
+$$
+y_1(t) = \begin{bmatrix} x_1(t) \\
+    x_2(t) \\
+    \varphi(t)
+\end{bmatrix} 
+= \begin{bmatrix} \mathbf x(t) \\
+    \varphi(t)
+\end{bmatrix}
+$$
 
+This assessment can be accomplished with a *mean euclidean distance*  $e(t) = ||\mathbf{\hat x}(t) - \mathbf{x}(t)||_2$ over evaluation duration $T$:
+
+$$
+MED = \frac{1}{T}\sum_{t=1}^T e(t)
+$$
+
+If you are interested in other localization metrics in ADAS context, please refer to [[2]](https://doi.org/10.3390/s21175855), where more sophisticated metrics (also considering bounding boxes) are defined.
+
+#### Example 2: Object tracking
+
+Another interesting assessment can be whether the system is detecting all objects (e.g. humans, pallets) within its own perception area:
+
+$$
+y_2(t) = \mathcal{O}_t = \{o_1, o_2, \dots, o_n \}_t
+$$
+
+Here, metrics like *multiple object tracking precision* (MOTP) or the *multiple object tracking accuracy* (MOTA) from [1] can be employed.
+
+![motp](motp.png)
+
+Small circles represent the actual objects (ground-truth) the large ones are the objects detected by the system (also called *object hypotheses*). MOTP considers the number of misdetections, false positives etc. over time. The MOTA metric computes the mean length of black arrows (i.e. the distances between detected and actual objects).
+
+In addition to numeric metrics, for a deeper scene understanding you probably want to visualize the object bounding boxes (red: estimated, blue: ground-truth) and sensor data for a particular timestep, similar to the image below[3]:
+
+![kitti-example](kitti-example.png)
+
+### Summary
+
+So far, many possible assessment methods and visualizations were introduced. You see, that on the first glance they are all different and share little between each other. For an evaluation environment those examples shall motivate a need for a generic architecture which is easy to extend and easy to undestand. This will be done in the next section.
 
 ## Architecture
 
+- erkennen, dass es t und T basierte artefakte gibt
 ## Summary
+
+## References
+
+[1] Bernardin, K., Stiefelhagen, R. *Evaluating Multiple Object Tracking Performance: The CLEAR MOT Metrics.* EURASIP Journal on Image and Video Processing (2008)
+
+[2] Rehrl, K.; Gröchenig, S. *Evaluating Localization Accuracy of Automated Driving Systems.* Sensors 2021, 21, 5855.
+
+[3] Yang, Bin & Luo, Wenjie & Urtasun, Raquel. (2019). *PIXOR: Real-time 3D Object Detection from Point Clouds.*
