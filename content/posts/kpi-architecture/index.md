@@ -1,7 +1,7 @@
 ---
-title: "KPI Framework"
-date: 2022-03-08T12:00:00+01:00
-draft: true
+title: "An extensible and modular architecture for evaluation of dynamical systems in real world environments"
+date: 2022-03-21T11:00:00+01:00
+draft: false
 math: true
 ---
 
@@ -29,7 +29,7 @@ The system's output signal $\tilde{y}(t)$, the resampled version $\hat y(t)$ and
 
 ![discrete-timeseries](discrete-timeseries.png)
 
-The clock for the evaluation is represented discrete timesteps $t_1, ..., t_n$. Note that there is no "rule them all" resampling method - it is engineers' task to select an interpolaton approach valid for the evaluation.
+The clock for the evaluation is represented discrete timesteps $t_1, ..., t_n$. Note that there is no "rule them all" resampling method - it is engineers' task to select an interpolation method valid for the particular signal of interest.
 
 ### Assessment examples
 
