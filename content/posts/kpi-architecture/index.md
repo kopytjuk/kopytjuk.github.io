@@ -7,9 +7,9 @@ math: true
 
 ## Introduction
 
-Evaluating complex systems or algorithms is hard. Especially if you are dealing with dynamic behaviour over time, the requirements to the evaluation codebase grow with every novel insight. First you want to compute just a single number describing algorithm's performance in one scalar (like mean squared error - *MSE*), but over the project's lifetime your expecations to the evaluation framework grow: at some point you wish to generate static visualizations, create reports over a time range, dig deep at some specific situations or simply render both the algorithm's output and the corresponding *ground-truth* (GT) in a video file.
+Evaluating complex systems operating is noisy real world environments is hard. Especially if you are dealing with dynamic behaviour over time, the requirements to the evaluation toolchain grow with every novel insight. In the beginning you want to compute just a single number describing algorithm's performance (like mean squared error - *MSE*), but over the project's lifetime your requirements to the evaluation framework grow: at some point you wish to generate static visualizations, create reports over a time range, dig deep at some specific situations or simply render both the algorithm's output and the corresponding *ground-truth* (GT) in a video file.
 
-In this post I will outline a software archecture which proved one's worth across multiple projects I was involved in. The focus of this architecture is the assessment of dynamical algorithms (or systems), which are commonly deployed into the "real" physical world (such as robots or sensors) and experience a lot of unexpected behavior which has to be further analyzed.
+In this post I will outline a modular software archecture for the evaluation codebase, which is imho simple and straightforward to extend and maintain. It proved one's worth across multiple projects I was involved in. The focus of this architecture is the assessment of dynamical algorithms (or systems) applied in the real world (such as robots, trackers or sensors) which experience unexpected behavior from the environment. In most cases this behaviour has to be further analyzed with additional metrics and plots.
 
 ## Basics
 
