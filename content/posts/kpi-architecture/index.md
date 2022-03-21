@@ -16,6 +16,7 @@ In this post I will outline a modular software archecture for the evaluation cod
 For the sake of better unterstanding, I'll introduce an artificial setting which helps to internalize the proposed concepts. Let's select the logistics domain and focus on a mobile robot picking and delivering small boxes in a production site. This warehouse is also filled with employees, pallet trucks and other moving objects which are to be detected and to avoided.
 
 ![audi-smart-factory](audi-smart-factory.jpg)
+Image: Audi AG
 
 First, I'll introduce a formal language discrete systems the architecture deals with. Later, a set of possible subtasks and assessment examples for the robot are presented to motivate the need for an extensible, application-independent evaluation tooling.
 
