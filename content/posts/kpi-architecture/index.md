@@ -1,5 +1,5 @@
 ---
-title: "An extensible and modular architecture for evaluation of dynamical systems in real world environments"
+title: "An extensible and modular architecture for evaluation of dynamic systems in real world environments"
 date: 2022-03-21T11:00:00+01:00
 draft: false
 math: true
@@ -9,7 +9,7 @@ math: true
 
 Evaluating complex systems operating is noisy real world environments is hard. Especially if you are dealing with dynamic behaviour over time, the requirements to the evaluation toolchain grow with every novel insight. In the beginning you want to compute just a single number describing algorithm's performance (like mean squared error - *MSE*), but over the project's lifetime your requirements to the evaluation framework grow: at some point you wish to generate static visualizations, create reports over a time range, dig deep at some specific situations or simply render both the algorithm's output and the corresponding *ground-truth* (GT) in a video file.
 
-In this post I will outline a modular software archecture for the evaluation codebase, which is imho simple and straightforward to extend and maintain. It proved one's worth across multiple projects I was involved in. The focus of this architecture is the assessment of dynamical algorithms (or systems) applied in the real world (such as robots, trackers or sensors) which experience unexpected behavior from the environment. In most cases this behaviour has to be further analyzed with additional metrics and plots.
+In this post I will outline a modular software archecture for the evaluation codebase, which is imho simple and straightforward to extend and maintain. It proved one's worth across multiple projects I was involved in. The focus of this architecture is the assessment of dynamic algorithms (or systems) applied in the real world (such as robots, trackers or sensors) which experience unexpected behavior from the environment. In most cases this behaviour has to be further analyzed with additional metrics and plots.
 
 ## Basics
 
@@ -22,7 +22,7 @@ First, I'll introduce a formal language discrete systems the architecture deals 
 
 ### Descrete systems
 
-In this post the focus lies on the assessment of *discrete* systems, which output an action or detection at specific points in time (timesteps). Moreover it will be assumed, that *equidistant* outputs are available, i.e. outputs are generated in a fixed output rate. This assumption rarely holds in real-world scenarios, where the output rate depends on system's load, other processes and the state of the environment. Thus, for the assessment, it is often helpful to *resample* or *interpolate* the signal to equidistant timesteps. Those timesteps can be seen as the *clock* of the evaluation routine. 
+In this post the focus lies on the assessment of *dynamic* (i.e. exhibiting continual change) and *discrete* systems, which generate an action or detection at specific points in time (timesteps). Moreover it will be assumed, that *equidistant* outputs are available, i.e. outputs are generated in a fixed output rate. This assumption rarely holds in real-world scenarios, where the output rate depends on system's load, other processes and the state of the environment. Thus, for the assessment, it is often helpful to *resample* or *interpolate* the signal to equidistant timesteps. Those timesteps can be seen as the *clock* of the evaluation routine. 
 
 Usually, for each timestep, there is a soft of ground-truth data, representing the desired behaviour of the system at particular point in time. For a mobile robot in logistics it can be a safe path, or for the object-detection task, the collection of ground-truth objects, which have to be tracked.
 
