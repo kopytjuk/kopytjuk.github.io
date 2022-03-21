@@ -7,33 +7,35 @@ math: true
 
 ## Introduction
 
-Evaluating complex systems or algorithms is hard. Especially if you are dealing with dynamic behaviour over time, the requirements to the evaluation codebase grow with each new insight. First you want to compute just a single number describing algorithm's performance in one scalar (like mean squared error - *MSE*), but over the projects lifetime your expecations to the evaluation framework grow: you also want to generate static visualizations, generate reports over a time range, look at some specific situations or simply render both the algorithms outputs and the corresponding ground-truth in a video file.
+Evaluating complex systems or algorithms is hard. Especially if you are dealing with dynamic behaviour over time, the requirements to the evaluation codebase grow with every novel insight. First you want to compute just a single number describing algorithm's performance in one scalar (like mean squared error - *MSE*), but over the project's lifetime your expecations to the evaluation framework grow: at some point you wish to generate static visualizations, create reports over a time range, dig deep at some specific situations or simply render both the algorithm's output and the corresponding *ground-truth* (GT) in a video file.
 
-In this post I will describe a software archecture which proved one's worth across multiple projects I was involved in. The focus of this architecture is the evaluation of are dynamical algorithms (or systems), which commonly deployed into the "real" physical world (such as robots or sensors) and run there for a specific time duration. 
+In this post I will outline a software archecture which proved one's worth across multiple projects I was involved in. The focus of this architecture is the assessment of dynamical algorithms (or systems), which are commonly deployed into the "real" physical world (such as robots or sensors) and experience a lot of unexpected behavior which has to be further analyzed.
 
 ## Basics
 
-For the sake of better unterstanding, I'll introduce an artificial setting which helps to internalize the proposed concept. Let's stick with the logistics domain and focus on a mobile robot picking and delivering small boxes in a production site. This warehouse is also filled with employees, pallet trucks and other moving objects which are to detect and to avoid.
+For the sake of better unterstanding, I'll introduce an artificial setting which helps to internalize the proposed concepts. Let's select the logistics domain and focus on a mobile robot picking and delivering small boxes in a production site. This warehouse is also filled with employees, pallet trucks and other moving objects which are to be detected and to avoided.
 
 ![audi-smart-factory](audi-smart-factory.jpg)
 
+First, I'll introduce a formal language discrete systems the architecture deals with. Later, a set of possible subtasks and assessment examples for the robot are presented to motivate the need for an extensible, application-independent evaluation tooling.
+
 ### Descrete systems
 
-In particular, we focus on evaluating *discrete* systems, which output an action or prediction at particular points in time (timesteps). Moreover we will assume that we deal with *equidistant* outputs, means that the outputs are generated in a fixed output rate. This assumption often does not hold in real-world implementations, where the output generation time depends on system's load, other processes and the state of the environment. Thus, it is often needed to *resample* or *interpolate* the signal to equidistant timesteps.
+In this post the focus lies on the assessment of *discrete* systems, which output an action or detection at specific points in time (timesteps). Moreover it will be assumed, that *equidistant* outputs are available, i.e. outputs are generated in a fixed output rate. This assumption rarely holds in real-world scenarios, where the output rate depends on system's load, other processes and the state of the environment. Thus, for the assessment, it is often helpful to *resample* or *interpolate* the signal to equidistant timesteps. Those timesteps can be seen as the *clock* of the evaluation routine. 
 
-In addition, for each timestep, there is ground-truth data, representing the desired behaviour of the system at that point in time. For a mobile robot in logistics it can be a safe path, for an aerial surveillance system it can be the collection of ground truth objects on the ground, which have to be tracked.
+Usually, for each timestep, there is a soft of ground-truth data, representing the desired behaviour of the system at particular point in time. For a mobile robot in logistics it can be a safe path, or for the object-detection task, the collection of ground-truth objects, which have to be tracked.
 
-The system's output, the resampled version and the corresponding ground truth can be visualized in a timeline:
+The system's output signal $\tilde{y}(t)$, the resampled version $\hat y(t)$ and the corresponding ground-truth $y(t)$ can be visualized in a timeline:
 
 ![discrete-timeseries](discrete-timeseries.png)
 
-### Evaluation schemes
+The clock for the evaluation is represented discrete timesteps $t_1, ..., t_n$. Note that there is no "rule them all" resampling method - it is engineers' task to select an interpolaton approach valid for the evaluation.
 
-In this section a collection of various metrics and visualizations is outlined to motivate the need for an extensible, application-independent evaluation tooling.
+### Assessment examples
 
 #### Example 1: Localization
 
-In the first example, the system's output can be its perceived position which has to be compared with it's actual position (with heading):
+In the first example, the robot's output can be its perceived position which has to be compared with it's actual position:
 
 $$
 y_1(t) = \begin{bmatrix} x_1(t) \\
@@ -51,11 +53,11 @@ $$
 MED = \frac{1}{T}\sum_{t=1}^T e(t)
 $$
 
-If you are interested in other localization metrics in ADAS context, please refer to [[2]](https://doi.org/10.3390/s21175855), where more sophisticated metrics (also considering bounding boxes) are defined.
+If you are interested in other localization metrics in ADAS context, please refer to [[2]](https://doi.org/10.3390/s21175855), where more sophisticated metrics (considering bounding boxes) are introduced.
 
 #### Example 2: Object tracking
 
-Another interesting assessment can be whether the system is detecting all objects (e.g. humans, pallets) within its own perception area. The system's output is a list of detected objects, i.e.:
+The next valuable assessment can be whether the system is detecting all objects (e.g. humans, pallets) within its own perception area to avoid them while navigating. The robot internally holds a list of detected objects, i.e.:
 
 $$
 y_2(t) = \mathcal{O}_t = \lbrace o_1, o_2, \dots, o_n \rbrace_t
@@ -63,63 +65,70 @@ $$
 
 Each object in the list is described by its unique ID, coordinates and heading, i.e. $o_i = [\text{id}, \mathbf x, \varphi]$.
 
-For the object tracking use-case, metrics like *multiple object tracking precision* (MOTP) or the *multiple object tracking accuracy* (MOTA) from [1] can be employed.
+For the object tracking subtask, metrics like *multiple object tracking precision* (MOTP) or the *multiple object tracking accuracy* (MOTA) from [1] can be employed. The idea will be shortly presented below:
 
 ![motp](motp.png)
 
-Small circles represent the actual objects (ground-truth) the large ones are the objects detected by the system (also called *object hypotheses*). MOTP considers the number of misdetections, false positives etc. over time. The MOTA metric computes the mean length of black arrows (i.e. the distances between detected and actual objects).
+Small circles represent the actual objects (ground-truth) the large ones are the objects detected by the system (also called *object hypotheses*). MOTP metric counts the number of misdetections, false detections, ID changes etc. over time. The MOTA metric computes the mean length of black arrows (i.e. the distances between detected and actual objects). For example a constant distance offset between the hypotheses and GT can be attributed to a sensor misalignment.
 
-In addition to numeric metrics, for a deeper scene understanding you probably want to visualize the object bounding boxes (red: estimated, blue: ground-truth) and sensor data for a particular timestep, similar to the image below[3]:
+----
+
+In addition to numeric metrics, for a deeper scene understanding you probably want to visualize the object bounding boxes (red: hypotheses, blue: ground-truth) and sensor data for a particular timestep, similar to the image below[3]:
 
 ![kitti-example](kitti-example.png)
 
 ### Summary
 
-So far, many possible assessment methods and visualizations were introduced. On the first glance they are all different and share little between each other. For an evaluation environment the variety of possible artifacts shall motivate a need for a generic architecture which is easy to understand and extend. In the next session we will try to to reach this goal.
+So far, a set of potental subtasks (path following and object detection) together with corresponding metrics was introduced. On the first glance they share little between each other - each one needs a specific treatment and its own implementation. In the next section I'll try define a generic language for the evaluation problem and propose an application-independent, extensible architecture.
 
 ## Architecture
 
-First, we will summarize all possible plots, metrics, visualizations and derivates derived from data as *artifacts*. Further we will group them into two categories:
+First, we will summarize all possible plots, metrics, visualizations and derivates as *artifacts*. Further we will group them into two categories:
 
-- *Timestep artifacts* can be generated from data available at a particular timestep $t$. For example, to compute the distance $e(t)$ between perceived position and it's actual position we only need the data from $t$. Another example is the previous image - you only need sensor data and the objects from timestep $t$. Artifacts which can be created (computed) iteratively would fall in that category - an example is the sum of all distances or writing into a video buffer.
-- *Timeseries artifacts* can only be generated from multiple timesteps. For example, in order to compute the mean distance (MED) you need the distances $e(t)$ from all $t$s. Animations which involve multiple frames also involve data from multiple timesteps. For the sake of simplicity, I will focus on artifacts which involve all timesteps, i.e. a data list of length $T$.
+- *Timestep artifacts* can be generated from data available at a particular timestep $t$. For example, to compute the distance $e(t)$ between perceived position and it's actual position of the robot we only need the data from $t$. Another example is the previous image - you only need sensor data and the objects (both GT and hypotheses) from timestep $t$.
+<!-- Artifacts which can be created  iteratively (one timestep after each other) would also fit in that category - an example is the sum of all distances over time $\sum_t e(t)$ or writing into a video buffer. -->
+- *Timeseries artifacts* however, aggregate data multiple timesteps. For example, in order to compute the mean distance (MED) you need the distances $e(t)$ from all $t$s. Animations which involve multiple frames also involve data from multiple timesteps. For the sake of simplicity, I'll focus on artifacts which involve all timesteps, i.e. a data list of length $T$.
 
-Further we will generalize both the output data from the system/algorithm under test and the ground-truth data as `EvaluationData`. Instances of this class have a method to retrieve the data from a particular timestep $t$.
+Further, let's generalize both the output data from the system/algorithm under test, sensor data and the ground-truth data as `EvaluationData`. Instances of this class have a `sample(t)` method to retrieve the data from a particular timestep $t$.
 
-The evaluation loop iterates over all timesteps, retrieves data from available data sources and generates timeseries-artifacts. Additionally, for the second artifact group the data has to be collected - you can think of a recording tape. After all timesteps are processed, the timeseries artifacts are computed.
+The evaluation loop iterates over all timesteps, retrieves data from available data sources and generates timeseries-artifacts. Additionally, for the timeseries artifacts, the data has to be collected over time - you can think of a recording tape. After all timesteps are processed, the timeseries artifacts are created.
 
 ![sequence-diagram](sequence-diagram.png)
 
-Note that `EvaluationData` collection stands for the available data sources, e.g. algorithm and ground-truth in the previous examples.
+As you can see, the methods `sample(t)`, `generate()` and `record()` are the core of the architecture.
 
-As you can see, the methods `sample(t)`, `generate()` and `record()` are the core of the architecture. The following class diagram shows multiple implementations for `EvaluationData`, `TimestepArtifact` and `TimeseriesArtifact`.
+----
+
+The following class diagram shows the abstract classes `EvaluationData`, `TimestepArtifact` and `TimeseriesArtifact` and together with their implementations. You can inherit from the abstract classes whenever you need a new artifact or a data source.
 
 ![class-diagram](class-diagram.png)
 
-You can extend your codebase with new metrics and plots and pass the list of desired artifacts to the evaluation loop without ever touching loop's codebase itself. The majority of code changes happen in the implementations of the artifacts and data sources.
+You can extend your codebase with new metrics and plots and pass the list of desired artifacts to the evaluation loop without touching the loop's codebase itself. The majority of code changes happen in the implementations of the artifacts and data sources.
 
-Moreover you can replace the algorithm under test by providing a different implementation as it was done with `AlgorithmOutputImpl1` and `AlgorithmOutputImpl2` - you can even have them both at the same time for comparison. The only thing to extend, is to create a family of artifacts supporting two algorithm outputs.
+Moreover you can replace the algorithm under test by providing a different implementation as it was done with `AlgorithmOutputImpl1` and `AlgorithmOutputImpl2` - you can even have them both at the same time for comparison. The only thing to extend, is to create a new family of artifacts supporting multiple algorithm outputs in the signature of `generate`.
 
-Note that you have full access to the whole data after feedng the `Tape` instance via `record()` , which simply logs the data to memory or disk.
+Also, bote that you have full access to the whole data after feeding the `Tape` instance via `record()` , which simply logs the data to memory or disk.
 
 ## Summary
 
-The proposed architecture with a main loop over evaluation timesteps, a collection of data sources and two artifact groups allows easy replacement, straightforward extensibility and modularity by introducing clean interfaces to retreive and pass data.
+Assessment and analysis of real world (discrete) systems can get more and more complex over time. The proposed architecture with a main loop over evaluation timesteps, a collection of data sources and two separate artifact groups allows easy replacement, straightforward extensibility and modularity by introducing clean interfaces to retreive and consume evaluation data.
 
-You want to use this architecture template if following is true:
+You want to use this architecture template if the following is true:
 
 - you have a discrete and dynamic system under test
-- you have different algorithm implementation for the same problem
-- you have a large number of evaluation artifacts and they surely will grow over time
-- you work in Python or similar language supporting *duck typing*.
+- you have multiple algorithm implementations for the same task
+- you have a large number of evaluation artifacts and the collection certainly will grow over time
+
+Of course, the proposed structure is an overkill for small number of metrics for application in "noise-free" envirnoments, where an extension towards more insights won't be needed.
 
 ## Possible extensions
 
-Probably you already recognized some insufficiences of the architecture. Those have to be addressed to fully uncover the potental:
+Nobody is perfect - this fact also applies to the architecture above. Here a list of further possible extensions:
 
 - *Timeseries artifacts* for variable sized (<T) lists.
-- Configuration management for data sources and artifact collections. Serializing data source and artifact instances allows reproduce the same plots and metrics at a different point of time.
+- Configuration management for data sources and artifact collections. Serializing data source and artifact instances allows to reproduce the same plots and metrics at a different point of time.
 - Manage passing arguments to `generate`. Havin multiple data sources allows a combination of different data constellations. Currently the `generate` signature solely accepts a list of objects equal to the number of data sources.
+- Parallelization - you can split the main loop over $t$ into small batches to decrease the runtime of a single run.
 
 ## References
 
@@ -128,3 +137,5 @@ Probably you already recognized some insufficiences of the architecture. Those h
 [2] Rehrl, K.; Gröchenig, S. *Evaluating Localization Accuracy of Automated Driving Systems.* Sensors 2021, 21, 5855.
 
 [3] Yang, Bin & Luo, Wenjie & Urtasun, Raquel. (2019). *PIXOR: Real-time 3D Object Detection from Point Clouds.*
+
+The UML plots were generated with [PlantUML](https://plantuml.com/en/), you can find the sources on [GitHub](https://github.com/kopytjuk/kopytjuk.github.io/tree/main/content/posts/kpi-architecture), in the root folder of this post.
