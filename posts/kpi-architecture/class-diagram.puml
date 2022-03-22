@@ -1,9 +1,9 @@
 @startuml
 left to right direction
 
-package "timeseries artifacts" <<Rectangle>> {
+package "timeseries artefacts" <<Rectangle>> {
 
-abstract class TimeseriesArtifact{
+abstract class TimeseriesArtefact{
   void {abstract} generate(objs: List[Tuple])
 }
 
@@ -25,14 +25,14 @@ class MeanDistance{
   + void generate(objs: List[Tuple[Position,Position]])
 }
 
-TimeseriesArtifact <|-- DebugAnimation1
-TimeseriesArtifact <|-- DebugAnimation2
-TimeseriesArtifact <|-- MeanDistance
+TimeseriesArtefact <|-- DebugAnimation1
+TimeseriesArtefact <|-- DebugAnimation2
+TimeseriesArtefact <|-- MeanDistance
 }
 
-package "timestep artifacts" <<Rectangle>> {
+package "timestep artefacts" <<Rectangle>> {
 
-abstract class TimestepArtifact{
+abstract class TimestepArtefact{
   void {abstract} generate(objs: Tuple)
 }
 
@@ -48,8 +48,8 @@ class PrintDistance{
   + void generate(objs: Tuple[Position,Position,LidarPoints])
 }
 
-TimestepArtifact <|-- DebugPlot
-TimestepArtifact <|-- PrintDistance
+TimestepArtefact <|-- DebugPlot
+TimestepArtefact <|-- PrintDistance
 }
 
 package data <<Rectangle>> {
