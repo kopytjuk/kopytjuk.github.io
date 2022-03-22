@@ -2,9 +2,9 @@
 hide footbox
 title Evaluation runtime
 
-collections TimeseriesArtifact as tseries_art order 32
+collections TimeseriesArtefact as tseries_art order 32
 participant Tape as tape order 31
-collections TimestepArtifact as ts_art order 30
+collections TimestepArtefact as ts_art order 30
 collections EvaluationData as eval_data order 20
 participant "main" as main order 10
 
@@ -18,11 +18,11 @@ loop t=1...T
     end note
 
     
-    loop i=1:len(artifacts)
+    loop i=1:len(artefacts)
         main -> ts_art: generate(<math>[y_t^1, ..., y_t^n]</math>)
     end
     note right
-    Generate timestep artifacts
+    Generate timestep artefacts
     end note
 
     main -> tape: record(<math>[y_t^1, ..., y_t^n]</math>)
@@ -38,10 +38,10 @@ end note
 main -> tape: data()
 main <- tape: <math>[Y^1, ..., Y^n]</math>
 
-loop i=1:len(artifacts)
+loop i=1:len(artefacts)
     main -> tseries_art : generate(<math>[Y^1, ..., Y^n]</math>)
 end
 note right
-Iterate over each global artifact
+Iterate over each global artefact
 end note
 @enduml
