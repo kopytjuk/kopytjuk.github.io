@@ -1,8 +1,8 @@
 ---
 title: "Bringing accident scene diagrams to life for AV simulation"
-date: 2022-11-20T09:03:20-08:00
+date: 2022-11-27T14:30:00+02:00
 math: true
-draft: true
+draft: false
 toc: true
 ---
 
