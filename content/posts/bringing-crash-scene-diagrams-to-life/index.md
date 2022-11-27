@@ -12,7 +12,7 @@ toc: true
 
 ## Foreword
 
-When it comes to safety of autonomous vehicles (AV), we as society often claim that such a system must be safer as an average human driver.
+When it comes to safety of autonomous vehicles (AV), we as a society often claim that such a system must be safer as an average human driver.
 To validate this requirement, the industry pushes metrics such as accident-free travelled distance, expecting to cover the most critical situations an AV would face.
 
 Unfortunately, the amount of driven distance required to statistically prove the safety of such a system is huge. 
@@ -36,7 +36,8 @@ The fundamental motivation for us is:
 
 > An autonomous system behaving well on those critical events shall bring us closer to the safety goal.
 
-Across the next sections we will quickly go over the information available in the above mentioned data source. From the scene diagrams we will extract the trajectories (position over time) of all actors involved which then can be used for simulation.
+Across the next sections we will quickly go over the information available in the above mentioned data source. 
+From the scene diagrams we will extract the trajectories (position over time) of all actors involved which then can be used for simulation.
 
 ## Using NHTSA accidents to improve safety
 
@@ -49,12 +50,11 @@ process of "sampling" the data. The following paragraph is taken from the offici
 
 Each accident is visualized in a *scene diagram*. The diagram shows the traffic participants at multiple points in time throughout the scenario from bird's eye view.
 
-![scene-diagram](scene-diagram.png)
+{{< figure src="scene-diagram.png" title="Scene diagram (Case Number: 1-10-2020-130-01) " >}}
 
 In addition to the diagram, NHTSA provides additional information about injuries, vehicle models, datetime etc. on their Crash Viewer:
 
-![crash-viewer](crash-viewer.png)
-
+{{< figure src="crash-viewer.png" title="NHTSA Crash Viewer: example case" >}}
 Given the scene diagram and surrounding meta data from the database, our task is to extract realistic trajectories usable in simulation.
 
 ## Methodology
@@ -70,61 +70,124 @@ In the consecutive paragraphs we will go over each step and spend some light on 
 
 ### Step 1: Extracting vehicle shapes from the diagram
 
-The scene diagram is provided in two formats: PDF and BLZ (FARO® Blitz). The latter can be opened in every text editor and parsed as an XML.
-Usually, the vehicles are encoded as <type=’gosmodel’>, the annotations such as “Event 1” are encoded labels and the road markings are polycurves. 
-The gosmodel and label elements can be represented as a rectangle (polygon) with a particular heading angle.
-The parsing logic for that is implemented in kopytjuk/nhtsa-ciss-python: Python API to NHTSA Crash Investigation Sampling System (CISS) (github.com).
+The scene diagram is provided in two formats: `PDF` and proprietary `BLZ` (FARO® Blitz software). The latter can be opened in every text editor and parsed as an XML:
+
+```xml
+<arasblitzscene>
+    <data fileversion="1.0" exeversion="1.0.0.10" />
+    <canvas clr="255,255,255,255" panX="-155.7646" panY="6.393857" />
+    <grid gclrclr="255,135,206,235" aclrclr="255,255,0,0" space="10" t="0" axisv="F" v="F" lclr="F" pX="0" pY="0" sizeX="2008.265" sizeY="1197.521" />
+    <scene posX="0" posY="0" theta="0" scalex="1" scaley="1">
+    <layers count="2" activendx="1">
+        <layer name="Default" visible="T" locked="F" paint="F" posX="0" posY="0" theta="0" scale="1" lnclr="255,0,0,0" fillclr="255,0,0,0">
+            <items count="64">
+                <item type="poly-curve" clrclr="255,0,0,0" fclrclr="255,169,169,169" ds="0" ulclr="F" fill="F" close="F" ssa="F" sea="F" fc="T" as="1" tds="1" tdt="0" tdc="F" tdOC="F" tdOS="0" tdOO="0" tdDT="0.5" tdDL="10" tdDS="25" tdST="0" tdCF="T" tdCR="0.01" tdCW="0.35">
+                    <pnt X="337.6161" Y="-279.2642" />
+                    <pnt X="58.80255" Y="102.7296" />
+                    <pnt X="-59.16676" Y="264.2328" />
+                    <pnt X="-233.6886" Y="503.7234" />
+                    </item>
+                <item type="GuardRail" v="T" pc="F" ulc="F" lo="1" pr="1" ps="10" pntl="2" pntd="/CPFQnzUakLq0XvBylFYQw==" mlclr="255,176,196,222" mdclr="255,128,64,0" ds="0.25" dt="0" dc="F" dOC="F" dOS="0" dOO="0" dDT="1" dDL="1" dDS="10" dST="1" dCF="F" dCR="0.1" dCW="0.35" />
+                <item type="gosmodel" name="SILVERADO 1500 CREW CAB S/BOX 4X4" dmgIdx="-1" agr="F" lclr="F" vis="T" hwb="T" t="2.150799" pX="45.50632" pY="71.68256" sX="18.70079" sY="6.660105" bsX="18.1124" bsY="6.504802" matFclr="255,192,192,192" matLclr="255,0,0,0"><!-- ... --></item>
+                <item type="label" round="F" fill="F" borderVis="F" vis="T" lClr="F" arrow="F" ds="F" border="0" arrowS="1" pW="0" sX="0.5" sY="0.5" theta="0" clrB="255,255,255,255" clrL="255,0,0,0" arrowStart="2" posX="175.101" posY="-6.71208" dimX="26.32889" dimY="19.88727" arrowEndX="NaN" arrowEndY="0" padX="0" padY="0">
+                    <text type="textp" lclr="F" vis="T" t="0" s="4" posX="166.5719" posY="-3.942969" dimX="26.32889" dimY="19.88727" matclr="255,0,0,0" txt="Event 1" fFN="Arial" fSize="3.343832" fStyle="0" txtSW="17.05804" txtSH="5.53822" alignV="1" alignH="1" />
+                    </item>
+                <!-- more items ... -->
+```
+
+Usually, the vehicles are denoted as items of `type="gosmodel"`, the (human) annotations such as *Event 1* are encoded as `type="label"` and the road markings are of `type="poly-curve"`.
+
+Both the vehicles and annotation elements can be represented as a rectangle:
+
+- sizes in X and Y direction: `sX`, `sY`
+- heading angle `t` in radians.
+
+The parsing logic is implemented and available [on GitHub](https://github.com/kopytjuk/nhtsa-ciss-python).
 
 ### Step 2: Associate shapes to actual vehicles
 
-Since the labels and the vehicles can be represented as rectangle, we can easily assign known vehicle IDs with the corresponding shapes by geometrical intersection (implemented by shapely’s intersect() method). For shapes without a label (this issue exists in some diagrams), a human has to intervene and add the corresponding pairing.
+Having represented vehicles and annotation as rectangles, we can easily pair them by checking the intersection.
+This can be efficiently implemented via `shapely`'s `intersection()` method (refer to [docs](https://shapely.readthedocs.io/en/stable/manual.html#object.intersection)).
 
-### Step 3: Order waypoints by occurence
+For shapes without a label on top (this issue is true in some diagrams, like the truck in the center of diagram), 
+a human has to intervene and add the corresponding pairing manually. For simplicity this pairing is done in a tiny excel table, where we set some assignments to `TRUE` or `FALSE`:
+
+{{< figure src="human-assignment.png" title="Assignment via excel and a diagram with numbered vehicle shapes, lane markings and labels. The shape numbers are green (S0-S19)." >}}
+
+### Step 3: Order waypoints by occurrence
 
 Next, having the vehicle locations in the diagram we will order them in time. The task is relatively straightforward for us humans,
-since we see the direction of the road, we see where the collision happened and can easily imagine the temporal order of events.
-However, this ordering shall be done in automated manner. Note that since the diagrams were created (drawn) manually, 
-there is no sequence numbering included in the BLZ file.
+since we see the direction of the road, we see where the collision happened and can easily imagine the temporal order of events (from bottom right to top left).
 
-If we see the ordering problem as a graph with vehicle positions as vertices and the kinematic energy needed to transition between position as edges, we can use travelling salesman algorithms to find the right order.
+However, this ordering shall be done in automated manner. Note that since the diagrams were created (drawn) by human technicians, 
+there is no sequence numbering included in the `.blz` file which we could use.
 
-![pose-ordering-energy](pose-ordering-energy.png)
+If we formulate the ordering problem as a **graph** with:
+- vehicle positions as vertices and 
+- the [*energy*](https://en.wikipedia.org/wiki/Energy) needed to transition between position as edges
+  
+we can use algorithms solving the [Travelling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem) to find the right order:
 
-Note that the distance alone is not the only factor for the energy required. To drive from B to A you have to brake (spend energy) and drive reverse. 
-Alternatively, you need to drive in circle. Driving from A to B however needs far less energy – the car solely faces air resistance and friction of the road (which is true for the former case, too). 
-Another example is B->C vs. B->D, where a larger distance has to be driven (together with a 90° turn). 
-For computing required energy we take a simple vacuum cleaner robot model which can only go straight or turn.
+> The travelling salesman problem (TSP) asks the following question: *Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once [...]?*"
 
-The travelling salesman optimal solution will find the most energy efficient (and thus most likely the actual) order of vehicle states.
+The TSP solution will lead us to the most energy efficient (and thus most likely the actual) order of vehicle locations.
 
-Note that this approach can be extended with a more sophisticated model and/or cost function.
+The following image shall give a small example of this energy graph:
+
+{{< figure src="pose-ordering-energy.png" title="Vehicle positions with velocities and required energy to transition between them. The corresponding graph is represented on the top left." >}}
+
+Note, that the distance alone is not the only factor for the required energy. To accomplish `A ← B` you have to decelerate to full stop (i.e. spend energy) and drive reverse. 
+Alternatively, you need to drive a circle to come back. Driving from `A → B` however needs far less energy – 
+the vehicle solely faces [air resistance](https://en.wikipedia.org/wiki/Drag_(physics)) 
+and [road friction](https://en.wikipedia.org/wiki/Rolling_resistance) (which is needed for the former case, of course). 
+
+The TSP algorithm is implemented in the `approximation.traveling_salesman_problem` function of the `networkx` library
+([docs](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.approximation.traveling_salesman.traveling_salesman_problem.html)). 
+Additionally, we set `cycle=False`, since we do not want to close the loop to the starting location.
+
+Note, that this approach can be extended with a more sophisticated model and/or cost function.
 This may be needed in complex situations (e.g. states before and after collision).
+
+For the rest of this post I will use the term *waypoints* to refer to the ordered list of vehicle locations.
 
 ### Step 4: Generate drivable trajectories
 
-Next, we need to derive a set of trajectories for each actor. The trajectories have to be physically feasible and pass the waypoints ordered previously.
+Next, we need to derive a set of trajectories - one for each actor. As stated before, 
+the trajectories have to be physically feasible and pass the waypoints ordered previously.
 
-Since we look for a trajectory and not only the path, we need to add time to our waypoints. 
-Due to the nature of the diagram, there is no time information available. 
-We need to assign plausible timestamps considering the information from CISS database (e.g. speed limit or case description).
-In the example outlined in this post, we take 2s as an equidistant time period between waypoints.
+Since we try to generate a *trajectory* and not only the path (locations \wo timestamps), we need to add time to our waypoints.
+Due to the nature of the diagram, there is no time information available.
+Thus, we need to assign plausible timestamps considering the information from CISS database (e.g. speed limit or case description).
+In this example, we take $\Delta T = 2s$ as constant time periods between waypoints.
 
-One way to do that is to employ a real vehicle model and solve an optimal trajectory problem given the waypoints and their timestamps as constrains. 
-The cost function for that problem shall favour human acceleration and steering behaviour.
-A more simple, faster but not necessarily realistic approach is to fit two (x & y) spline functions over time:
+One way to create trajectories is to formulate a [trajectory opitmization problem](http://underactuated.mit.edu/trajopt.html#section1) given the waypoints and their timestamps as constrains.
+Therefore we would need to employ a mathematical vehicle model. The cost function $J$ for that problem shall favour human acceleration and steering behaviour.
+
+A far more simple and faster but not necessarily realistic approach is to fit two [spline functions](https://en.wikipedia.org/wiki/Spline_interpolation) over time:
 
 $$
-TODO
+x(t) = f(t; \bold w_x) \\\
+y(t) = f(t; \bold w_y)
 $$
 
-We can give the initial and final velocities (speed limit from the database and 0) as constraints to the fitting algorithm.
-I used scipy.interpolate.make_interp_spline — SciPy v1.9.3 Manual for fitting the trajectories.
+Note that time $t$ is the argument for both of the functions.
+
+We find the spline parameters $\bold w_x$ by fitting the spline to the waypoints ($t$ and $x$ in particular):
+
+$$
+w^{i} = (t^i, x^i, y^i) \ \forall i \in [1 ... N]
+$$
+
+For a better result, we can provide the initial and final velocities $v_0, v_f$ (speed limit from the database and 0) as constraints to the fitting algorithm.
+For this post `scipy.interpolate.make_interp_spline` with `k=3` (cubic polynoms) was used for fitting the trajectories.
 
 In the following animation the four involved vehicle trajectories are visualized:
 
 {{< video "20201010130-cartesian.mp4" "test" 500 450 >}}
 
-In case the trajectories are not plausible (deceleration without obvious reasons, like V4 at 0:02) or physical feasible repeat the fitting process with different timestamps and initial velocities. The idea for this iterative process was taken from [1]. The physical feasibility can be checked on the curvature or acceleration/velocity signal of the trajectory. Imagine a heavy vehicle accelerating with 1G, which is only possible with tuned Cybertruck.
+Sometimes, dependent on chosen $\Delta T$ or velocities $v_0, v_f$, the trajectories won't be plausible (e.g. deceleration without obvious reasons, like V4 at `0:02`) or even worse, physically infeasible.
+The physical feasibility can be checked in automated manner on the curvature or acceleration/velocity signal of the trajectory. 
+To address those issues, repeat the fitting process with different timestamps and velocities. The idea for this iterative process was taken from [this paper](https://ieeexplore.ieee.org/document/5509799).
 
 ## Summary
 
@@ -132,3 +195,5 @@ This blog post outlines the methodology to make accident database data from NHTS
 
 ## References
 
+- GitHub repository: https://github.com/kopytjuk/nhtsa-ciss-python
+- NHTSA CISS homepage: https://www.nhtsa.gov/crash-data-systems/crash-investigation-sampling-system
