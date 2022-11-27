@@ -132,36 +132,56 @@ we can use algorithms solving the [Travelling Salesman Problem](https://en.wikip
 
 The TSP solution will lead us to the most energy efficient (and thus most likely the actual) order of vehicle locations.
 
-The following image shall give a small example of this energy graph:
+The following image shall provide a small example of the *energy graph*:
 
 {{< figure src="pose-ordering-energy.png" title="Vehicle positions with velocities and required energy to transition between them. The corresponding graph is represented on the top left." >}}
+
+For the rest of this post I will use the term *waypoints* to refer to the ordered list of vehicle locations.
+
+*> In case you are not interested in the implementation details, feel free to jump straight to Step 4!*
+
+-----
+
+Now we will elaborate a little on the energy computation and the TSP implementation details.
 
 Note, that the distance alone is not the only factor for the required energy. To accomplish `A ← B` you have to decelerate to full stop (i.e. spend energy) and drive reverse. 
 Alternatively, you need to drive a circle to come back. Driving from `A → B` however needs far less energy – 
 the vehicle solely faces [air resistance](https://en.wikipedia.org/wiki/Drag_(physics)) 
-and [road friction](https://en.wikipedia.org/wiki/Rolling_resistance) (which is needed for the former case, of course). 
+and [road friction](https://en.wikipedia.org/wiki/Rolling_resistance) (which is needed for the former case, of course).
+
+The model used for the energy computation between two states (with distance $\Delta d$ and angle difference $\Delta\theta$):
+
+$$
+E_{driving}(\Delta d) = F_\mu \Delta d = m g \mu \Delta d \\\
+E_{rotating}(\Delta\theta) = F_\mu \frac{L}{2} \Delta\theta = m g \mu \frac{L}{2} \Delta\theta
+$$
+
+with mass of the object $m=2000kg$, friction $\mu=1.0$ its length $L=4.5$.
 
 The TSP algorithm is implemented in the `approximation.traveling_salesman_problem` function of the `networkx` library
 ([docs](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.approximation.traveling_salesman.traveling_salesman_problem.html)). 
 Additionally, we set `cycle=False`, since we do not want to close the loop to the starting location.
 
-Note, that this approach can be extended with a more sophisticated model and/or cost function.
+Note, that this approach can be extended with a more sophisticated model and/or edge weight (cost) function.
 This may be needed in complex situations (e.g. states before and after collision).
-
-For the rest of this post I will use the term *waypoints* to refer to the ordered list of vehicle locations.
 
 ### Step 4: Generate drivable trajectories
 
 Next, we need to derive a set of trajectories - one for each actor. As stated before, 
 the trajectories have to be physically feasible and pass the waypoints ordered previously.
+In the following animation the four resulting vehicle trajectories are visualized:
 
-Since we try to generate a *trajectory* and not only the path (locations \wo timestamps), we need to add time to our waypoints.
-Due to the nature of the diagram, there is no time information available.
-Thus, we need to assign plausible timestamps considering the information from CISS database (e.g. speed limit or case description).
-In this example, we take $\Delta T = 2s$ as constant time periods between waypoints.
+{{< video "20201010130-cartesian.mp4" "test" 500 450 >}}
 
-One way to create trajectories is to formulate a [trajectory opitmization problem](http://underactuated.mit.edu/trajopt.html#section1) given the waypoints and their timestamps as constrains.
-Therefore we would need to employ a mathematical vehicle model. The cost function $J$ for that problem shall favour human acceleration and steering behaviour.
+Since we try to generate a *trajectory* and not only the *path* (i.e. locations with vs. without timestamps), we need to add **time** to our waypoints.
+
+Due to the nature of the diagram, unfortunately there is no time information available in the `.blz` file.
+Thus, we need to manually select plausible timestamps considering the information from CISS database (e.g. speed limit or case description).
+In this example, we set $\Delta T = 2s$ as constant time periods between waypoints.
+
+One way to create trajectories is to formulate a [trajectory opitmization problem](http://underactuated.mit.edu/trajopt.html#section1) 
+given the waypoints and their timestamps as constrains. Additionally, the cost function $J$ for that problem shall favour human acceleration and steering behaviour.
+Therefore we would need to employ a mathematical vehicle model and solve a quite computationally challenging problem.
 
 A far more simple and faster but not necessarily realistic approach is to fit two [spline functions](https://en.wikipedia.org/wiki/Spline_interpolation) over time:
 
@@ -181,9 +201,7 @@ $$
 For a better result, we can provide the initial and final velocities $v_0, v_f$ (speed limit from the database and 0) as constraints to the fitting algorithm.
 For this post `scipy.interpolate.make_interp_spline` with `k=3` (cubic polynoms) was used for fitting the trajectories.
 
-In the following animation the four involved vehicle trajectories are visualized:
 
-{{< video "20201010130-cartesian.mp4" "test" 500 450 >}}
 
 Sometimes, dependent on chosen $\Delta T$ or velocities $v_0, v_f$, the trajectories won't be plausible (e.g. deceleration without obvious reasons, like V4 at `0:02`) or even worse, physically infeasible.
 The physical feasibility can be checked in automated manner on the curvature or acceleration/velocity signal of the trajectory. 
