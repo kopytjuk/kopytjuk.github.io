@@ -216,7 +216,7 @@ To address those issues, repeat the fitting process with different timestamps an
 
 This blog post outlines the methodology to convert scene diagrams from the NHTSA accident database to machine readable trajectories.
 The extracted trajectories of the actors involved can be used for simulation of ADAS systems or self-driving vehicles. 
-Simulating >11000 accident can support to develop and optimize the behaviour of automated systems in critical or unforeseen scenarios.
+Simulating >11000 accidents can support the development of the behaviour of automated systems in critical or unforeseen scenarios.
 
 ## References
 
