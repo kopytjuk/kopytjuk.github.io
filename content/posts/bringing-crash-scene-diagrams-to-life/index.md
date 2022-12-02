@@ -197,7 +197,7 @@ x(t) = f(t; \bold w_x) \\\
 y(t) = f(t; \bold w_y)
 $$
 
-Note that time $t$ is the argument for both of the functions.
+Note that the time $t$ is the argument for both of the functions.
 
 We find the spline parameters $\bold w_x$ by fitting the spline to the waypoints ($t$ and $x$ in particular):
 
@@ -208,11 +208,9 @@ $$
 For a better result, we can provide the initial and final velocities $v_0, v_f$ (speed limit from the database and 0) as constraints to the fitting algorithm.
 For this post `scipy.interpolate.make_interp_spline` with `k=3` (cubic polynoms) was used for fitting the trajectories.
 
-
-
-Sometimes, dependent on chosen $\Delta T$ or velocities $v_0, v_f$, the trajectories won't be plausible (e.g. deceleration without obvious reasons, like V4 at `0:02`) or even worse, physically infeasible.
+In some cases, dependent on chosen $\Delta T$ or velocities $v_0, v_f$, the computed trajectories are not plausible (e.g. deceleration without obvious reasons, like V4 at `0:02`) or even worse, physically infeasible.
 The physical feasibility can be checked in automated manner on the curvature or acceleration/velocity signal of the trajectory. 
-To address those issues, repeat the fitting process with different timestamps and velocities. The idea for this iterative process was taken from [this paper](https://ieeexplore.ieee.org/document/5509799).
+To address those issues, repeat the fitting process with different timestamps and velocities. The idea for this iterative process was taken from [4].
 
 ## Summary (TL;DR;)
 
@@ -222,8 +220,9 @@ Simulating >11000 accident can support to develop and optimize the behaviour of 
 
 ## References
 
-1. Wachenfeld, W., Winner, H. (2016). The Release of Autonomous Vehicles, section 21.5.2 ([open access](https://link.springer.com/chapter/10.1007/978-3-662-48847-8_21))
+1. Wachenfeld, W., Winner, H. (2016). The Release of Autonomous Vehicles, section 21.5.2 ([Springer](https://link.springer.com/chapter/10.1007/978-3-662-48847-8_21))
 2. NHTSA Mission: https://one.nhtsa.gov/About-NHTSA/Who-We-Are-and-What-We-Do
 3. NHTSA CISS homepage: https://www.nhtsa.gov/crash-data-systems/crash-investigation-sampling-system
-4. GitHub repository: https://github.com/kopytjuk/nhtsa-ciss-python
+4. M. Werling, J. Ziegler, S. Kammel and S. Thrun (2010), Optimal trajectory generation for dynamic street scenarios in a Frenét Frame ([IEEE](https://ieeexplore.ieee.org/document/5509799))
+5. GitHub repository: https://github.com/kopytjuk/nhtsa-ciss-python
 
