@@ -15,15 +15,15 @@ toc: true
 When it comes to safety of autonomous vehicles (AV), we as a society often claim that such a system must be safer as an average human driver.
 To validate this requirement, the industry pushes metrics such as accident-free travelled distance, expecting to cover the most critical situations an AV would face.
 
-Unfortunately, the amount of driven distance required to statistically prove the safety of such a system is huge. 
+Unfortunately, the amount of driven distance required to statistically prove the safety of such a system is in the order of 6 billion km [1]. 
 Even if we reduce the number of (quite expensive) real world tests to a minimum with simulated drives, the process of validating a new software version is still extremely challenging.
 The simulation process must cover a high number of random routes in a simulated world at different weather and traffic conditions.
 Just imagine the effort of modelling a whole city with its traffic network, vegetation, and traffic participants (Grand Theft Auto anyone?).
 
-Thus, the industry takes a more focussed approach with *scenario-based testing* where the task of driving is separated in smaller chunks such as entering the road, 
-driving straight, changing lanes or turning right in an intersection. Having all the scenarios simulated in various conditions, 
-the industry claims to be very close to a perfectly safe system. Of course, for the maximum of realism, 
-you still have to model the environment around the scenario, but the effort is extremely reduced.
+Thus, the industry takes a more focussed approach with **scenario-based testing** where the task of driving is separated in smaller chunks such as *entering the road*, 
+*driving straight*, *changing lanes* or *turning right in an intersection*. Having all the scenarios simulated in various conditions, 
+the industry hopes to reach the goal of a perfectly safe system. Of course, in those short chunks of driving, for the maximum of realism, 
+you still need to model the environment around the scenario, but the effort of modelling an entire city is avoided.
 
 A valid criticism to the scenario-based approach is the question whether the scenario catalogue (i.e. set of scenarios) 
 maintained the developers or regulators will cover all critical situations where an AV could fail. 
@@ -41,7 +41,14 @@ From the scene diagrams we will extract the trajectories (position over time) of
 
 ## Using NHTSA accidents to improve safety
 
-The database consists of 11358 highway accidents involving human injuries. It may be helpful to undestand the 
+A few words about the organization behind the data we will use:
+
+> The National Highway Traffic Safety Administration (NHTSA), [...], under the U.S. Department of Transportation, 
+> is responsible for reducing deaths, injuries and economic losses resulting from motor vehicle crashes.
+> This is accomplished by setting and enforcing safety performance standards for motor vehicles and motor vehicle equipment,
+> and through grants to state and local governments to enable them to conduct effective local highway safety programs.[2]
+
+The database consists of **11358 highway accidents** involving human injuries. It may be helpful to understand the 
 process of "sampling" the data. The following paragraph is taken from the official website hosted by NHTSA:
 
 > After a crash has been sampled, trained Crash Technicians obtain data from crash sites by documenting scene evidence such as *skid marks*, fluid spills, and struck objects. They locate the *vehicles* involved, document the crash damage, and identify interior components that were contacted by the occupants. On-site inspections are followed-up with confidential interviews of the crash victims and a review of medical records for injuries sustained in the crash. *[...]*
@@ -64,7 +71,7 @@ In a nutshell the process of extracting trajectories has the following steps:
 1.	Extract vehicle shapes and labels from scene diagram
 2.	Associate shapes to actual vehicles (i.e. assign vehicle IDs to extracted shapes)
 3.	For each vehicle, order the shape positions by time of occurrence to obtain waypoints
-4.	For each vehicle and its waypoints, generate a physically feasible trajectory
+4.	For each vehicle and its waypoints, generate a realistic (i.e. physically feasible) trajectory
 
 In the consecutive paragraphs we will go over each step and spend some light on each of them.
 
@@ -165,7 +172,7 @@ Additionally, we set `cycle=False`, since we do not want to close the loop to th
 Note, that this approach can be extended with a more sophisticated model and/or edge weight (cost) function.
 This may be needed in complex situations (e.g. states before and after collision).
 
-### Step 4: Generate drivable trajectories
+### Step 4: Generate realistic trajectories
 
 Next, we need to derive a set of trajectories - one for each actor. As stated before, 
 the trajectories have to be physically feasible and pass the waypoints ordered previously.
@@ -207,11 +214,16 @@ Sometimes, dependent on chosen $\Delta T$ or velocities $v_0, v_f$, the trajecto
 The physical feasibility can be checked in automated manner on the curvature or acceleration/velocity signal of the trajectory. 
 To address those issues, repeat the fitting process with different timestamps and velocities. The idea for this iterative process was taken from [this paper](https://ieeexplore.ieee.org/document/5509799).
 
-## Summary
+## Summary (TL;DR;)
 
-This blog post outlines the methodology to make accident database data from NHTSA available for simulation of self-driving vehicles. Parsing the scene diagrams we can extract trajectories (positions over time) which can be used in most simulation frameworks as an input for the traffic. Simulating >11000 accident cases from the perspective of each participant may be valuable to decrease the gap to a fully safe system.
+This blog post outlines the methodology to convert scene diagrams from the NHTSA accident database to machine readable trajectories.
+The extracted trajectories of the actors involved can be used for simulation of ADAS systems or self-driving vehicles. 
+Simulating >11000 accident can support to develop and optimize the behaviour of automated systems in critical or unforeseen scenarios.
 
 ## References
 
-- GitHub repository: https://github.com/kopytjuk/nhtsa-ciss-python
-- NHTSA CISS homepage: https://www.nhtsa.gov/crash-data-systems/crash-investigation-sampling-system
+1. Wachenfeld, W., Winner, H. (2016). The Release of Autonomous Vehicles, section 21.5.2 ([open access](https://link.springer.com/chapter/10.1007/978-3-662-48847-8_21))
+2. NHTSA Mission: https://one.nhtsa.gov/About-NHTSA/Who-We-Are-and-What-We-Do
+3. NHTSA CISS homepage: https://www.nhtsa.gov/crash-data-systems/crash-investigation-sampling-system
+4. GitHub repository: https://github.com/kopytjuk/nhtsa-ciss-python
+
