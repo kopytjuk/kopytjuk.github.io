@@ -2,11 +2,12 @@
 title: "About"
 ---
 
-My name is Marat, I was born in the early 90's in Witebsk (Belarus), currently work and live in Heilbronn (South Germany). I studied mechatronics for Bachelor. and automated driving for Masters degree. My mother language is Russian, but over the time the available vocabulary in German and English got more advanced.
+My name is Marat, I was born in the early 90's in Witebsk (Belarus), currently work and live in Heilbronn (South Germany). I studied mechatronics for Bachelors, and Automated Driving for Masters degree.
 
-I count myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and probability theory is essential towards inspiring, efficient, future-proof and reliable products.
+I see myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and probability theory is essential towards inspiring, efficient, future-proof and reliable products.
 
-I heavily use Python and [NumFocus](https://numfocus.org/sponsored-projects) stack (e.g. `scipy` and `pandas`) both for my professional and hobby projects.
+I enjoy teaching, insightful visualizations and well written books. In my free time I like to spend time on the couch after a run, watch movies and
+(when there is time left) play RPG videogames.
 
 ## Projects
 
