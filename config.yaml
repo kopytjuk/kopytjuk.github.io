@@ -23,7 +23,5 @@ params:
           url: "https://github.com/kopytjuk"
         - name: linkedIn
           url: "https://www.linkedin.com/in/kopytjuk/"
-        - name: instagram
-          url: "https://www.instagram.com/marat_kopytjuk/"
         - name: email
           url: "mailto:kopytjuk@gmail.com"
