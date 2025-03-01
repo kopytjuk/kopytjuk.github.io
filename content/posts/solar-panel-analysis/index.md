@@ -41,6 +41,8 @@ An aerial image is usually converted to an [**orthophotograph**](https://en.wiki
 **orthorectification**. Unlike an uncorrected aerial photograph, an orthophoto can be used to measure true distances. In other words,
 when we measure the distance between two trees, we can multiple the value in pixel with a known scaling factor to obtain the true distance in meters.
 
+For simplicity, I will use the term *aerial image* to refer to both aerial photographs and orthophotographs in this article.
+
 The image below shows an orthophoto of a residential area close to the margin of a a single orthophoto. 
 Note that the buildings are not perfect rectangles, due to the orthorectification process.
 
@@ -54,7 +56,7 @@ allowing them to be accurately positioned and overlaid within a geographic infor
 Luckily, the coordinate information is already embedded in every image file allowing us to locate a particular location (e.g. a GPS longitude and latitude) to a single pixel.
 The image data and georeferencing metadata are stored in [JPEG2000](https://en.wikipedia.org/wiki/JPEG_2000) format (`.jp2`).
 
-You can find the areal images [here](https://www.opengeodata.nrw.de/produkte/geobasis/lusat/akt/dop/dop_jp2_f10/).
+You can access the images [here](https://www.opengeodata.nrw.de/produkte/geobasis/lusat/akt/dop/dop_jp2_f10/).
 
 ### Annual solar energy yield
 
@@ -62,12 +64,12 @@ In order to estimate the amount of energy a roof covered by solar panels generat
 use the solar energy yield (in German: *Solarkataster*) data. Each pixel of this bitmap contains the expected annual energy yield in $\frac{kWh}{m^2}$. The values were estimated using solar radiation and weather data provided by the German Weather Service combined with
 digital surface models for considering obstacles like trees or higher buildings which reduce the solar yield by casting shadows. More details on how those maps are created can be found in [1].
 
-The image below shows orthophoto data overlayed with energy yield data. Dark red areas indicate high energy yield where white areas
+The image below shows aerial image data overlayed with energy yield data. Dark red areas indicate high energy yield where white areas
 indicate low solar returns.
 
 ![solar-yield](solar-yield-example.jpg)
 
-The bitmaps are available in 50cm and 1m resolution (true length of each pixel). You can find the yield data [here](https://www.opengeodata.nrw.de/produkte/umwelt_klima/energie/solarkataster/strahlungsenergie_50cm/).
+The bitmaps are available in 50cm and 1m resolution (true length of each pixel). You can access the yield data [here](https://www.opengeodata.nrw.de/produkte/umwelt_klima/energie/solarkataster/strahlungsenergie_50cm/).
 
 ### Data organization
 
@@ -94,12 +96,19 @@ aerial image `dop10rgbi_32_280_5652_1_nw_2023.jp2`:
 
 ## Methodology
 
-The following image shows the ...
+The following workflow outlines the processing of a single 1km tile.
 
 ![methodology](methodology.png)
 
-Explaining step by step ...
+First, all buildings, address, their exact location and their polygon outlines (e.g. a rectangle for a simple 4 wall building) are extracted.
+Each building receives a unique ID. The outline is used for cropping images and for extracting the solar yield.
 
+The cropped aerial images are passed to an Machine Learning (ML) based object detector, which outputs the location of each solar panel group.
+
+The detections are combined with solar energy yield data (and several assumptions about the solar panel technology) to estimate the **actual** annual energy yield. The building outlines combined with solar energy yield data provide the **potential** amout of energy.
+
+The information flows into a single table (grey) which can be further employed to answer
+our introductory questions about installation rates of solar panels.
 
 ### Extracting building outlines
 
