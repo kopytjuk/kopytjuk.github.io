@@ -94,13 +94,14 @@ aerial image `dop10rgbi_32_280_5652_1_nw_2023.jp2`:
 
 ## Methodology
 
-The following image shows the 
+The following image shows the ...
 
-```python
-print("hello")
-```
+![methodology](methodology.png)
 
-### Finding building outlines
+Explaining step by step ...
+
+
+### Extracting building outlines
 
 ### Cropping the images
 
