@@ -153,7 +153,7 @@ def transform_wgs84_to_utm32N(geom: BaseGeometry) -> BaseGeometry:
     return shapely_ops.transform(transformer_to_25832.transform, geom)
 ```
 
-The `transform_wgs84_to_utm32N` function can transform any of [shapely](https://shapely.readthedocs.io/en/2.0.6/index.html)'s geometry types (Point, LineString, Polygon) from WGS84 (i.e. longitude and latitude) to the desired UTM32 (x, y) coordinates. Using this function applied applied on the geometries in `buildings_gdf` we can compile a a tabular **building overview** dataset, which consists of a set of buildings with following attributes:
+The `transform_wgs84_to_utm32N` function can transform any of [shapely](https://shapely.readthedocs.io/en/2.0.6/index.html)'s geometry types (Point, LineString, Polygon) from WGS84 (i.e. longitude and latitude) to the desired UTM32 (x, y) coordinates. Using this function applied on the geometries in `buildings_gdf` we can compile a a tabular **building overview** dataset, which consists of a set of buildings with following attributes:
 
 - building ID
 - OSM way ID
@@ -170,10 +170,12 @@ The dataset is used as an input for both the cropping image and energy extractio
 
 The ML-model which I selected for the detection tasks works well for a zoomed in image of a building. Therefore, I need to crop the large aerial image from a single tile into smaller images, having the building of interest in its center with a 5-10m margin around.
 
-But first, we need to open the aerial image itself. This can be done with [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
-The library correctly interprets both the pixel data as georeferencing information, which is is stored as metadata in the JPEG2000 file.
-The pixel data can be accessed from a `4xWxH` tensor, with red, blue, green and infrared channels.
+To open the aerial image we will use the [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
+The library interprets both the pixel data as georeferencing information, which is is stored as metadata in the JPEG2000 file.
+The pixel data can be accessed with a `.read()` call in a `4xWxH` tensor, with red, blue, green and infrared channels.
 `W` and `H` are the width and height of the image in pixel units.
+
+The following script shows the steps required to crop a single building from the:
 
 ```python
 import rasterio
@@ -206,11 +208,34 @@ with rasterio.open(aerial_image_path) as image_data:
     plt.imsave("building-cut.png", arr=image_matrix, dpi=200)
 ```
 
-Additionally to the cropped image, using `affine_transform_px_to_geo` we also transform and store 
-the building outline in pixel coordinates of the cropped image, to filter out detections which fall
-outside the area of the actual building.
+Additionally to the cropped image, using `affine_transform_px_to_geo` object we transform 
+the building outline to pixel coordinates of the cropped image. The transformed polygon is later used
+to filter out detections which fall outside the area of the actual building:
 
+```python
+# invert
+affine_transform_geo_to_px = ~affine_transform_px_to_geo
 
+# convert to a structure used by shapely
+affine_transform_for_shapely = affine_transform_geo_to_px.to_shapely()
+
+# polygon in pixel coordinates of the full tile
+building_polygon_px = shapely.affinity.affine_transform(
+    building_polygon, affine_transform_for_shapely
+)
+
+# polygon in the pixel coordinates of the cropped image
+building_polygon_px_image = shapely.affinity.translate(
+    building_polygon_px, -crop_window.col_off, -crop_window.row_off
+)
+```
+
+The result of the cropping logic is a folder with images (with building-IDs as filenames) and a
+`overview.csv` table which holds the building polygon coordinates in pixel coordinates:
+
+![](image-cropper-output.jpg)
+
+This folder is used as input for the ML-based detector, which we discuss next.
 
 ### Running an ML detector
 
