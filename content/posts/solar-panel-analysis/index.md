@@ -100,27 +100,121 @@ The following workflow outlines the processing of a single 1km tile.
 
 ![methodology](methodology.png)
 
-First, all buildings, address, their exact location and their polygon outlines (e.g. a rectangle for a simple 4 wall building) are extracted.
+First, all buildings, address, their exact location and their polygon outlines (e.g. a rectangle for a simple 4 wall building) are extracted from OpenStreetMap (OSM).
 Each building receives a unique ID. The outline is used for cropping images and for extracting the solar yield.
 
-The cropped aerial images are passed to an Machine Learning (ML) based object detector, which outputs the location of each solar panel group.
+The area around a single building is cropped from the aerial image tiles. The  images are passed to an Machine Learning (ML) based object detector, which outputs the location of each solar panel group.
 
 The detections are combined with solar energy yield data (and several assumptions about the solar panel technology) to estimate the **actual** annual energy yield. The building outlines combined with solar energy yield data provide the **potential** amout of energy.
 
-The information flows into a single table (grey) which can be further employed to answer
+The information flows into a final tabular dataset (table in grey) which can be further employed to answer
 our introductory questions about installation rates of solar panels.
+
+The subsequent sections will offer technical insights into each step. If you are interested in the technical modalities like masking raster data or selecting the right ML model, feel free to stay. Otherwise, feel free to skip ahead to the [Case Study: X](#case-study-x) section,
+where we use the final table to analyze the installation rate of a small village.
 
 ### Extracting building outlines
 
-### Cropping the images
+First, we need to extract all buildings which exist in a single geographical area. For that, we will use
+the OSMnx library, a Python package to access street networks and other geospatial features (such as buildings in our case) 
+from OSM:
 
-The pixel data and georeferecing information
-can be obtained with the [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
+```python
+import osmnx as ox
 
- The pixel data
-of an image with width W and height H is stored in a `4xWxH` tensor, with red, blue, green, infrared channels.
+# Fetch buildings from OpenStreetMap
+buildings_gdf = ox.features_from_bbox(bbox, tags={"building": True})
+```
+
+The result is a [GeoDataFrame](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html) 
+with the OSM `way` identifier as its index. We keep the original identifier of the building, in order to find it in OpenStreetMap, e.g.
+for the building `316174397` we can find it at https://www.openstreetmap.org/way/316174397.
+
+The `geometry` column of the `buildings_gdf` holds the building outline in WGS84 geodetic coordinates,
+i.e. it is a polygon represented as a sequence of (longitude, latitude) pairs. Note that the units of WGS84 coordinates
+are degrees and not lengths such as meters or feet. 
+
+In order to use the building geometries with the geographic data from OpenGeodata.NRW, they first need to be transformed
+to the UTM32N (Northern Hemisphere) coordinate system.
+The [UTM](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)-system (UTM32N is a subset) is a cartesian system, which can be used to measure lengths in meters.
+
+For the transformation we implement two helpful functions which we will use across the project:
+
+```python
+import pyproj
+from shapely import ops as shapely_ops
+from shapely.geometry.base import BaseGeometry
+
+# WGS84 to UTM
+transformer_to_25832 = pyproj.Transformer.from_crs("EPSG:4326", 
+    "EPSG:25832", always_xy=True)
+
+def transform_wgs84_to_utm32N(geom: BaseGeometry) -> BaseGeometry:
+    return shapely_ops.transform(transformer_to_25832.transform, geom)
+```
+
+The `transform_wgs84_to_utm32N` function can transform any of [shapely](https://shapely.readthedocs.io/en/2.0.6/index.html)'s geometry types (Point, LineString, Polygon) from WGS84 (i.e. longitude and latitude) to the desired UTM32 (x, y) coordinates. Using this function applied applied on the geometries in `buildings_gdf` we can compile a a tabular **building overview** dataset, which consists of a set of buildings with following attributes:
+
+- building ID
+- OSM way ID
+- address (`addr:street`, `addr:housenumber`, `addr:postcode` etc.)
+- building outline in UTM32 coordinates (as a `shapely.Polygon`)
+
+The following image shows the first two entries of the building overview data:
+
+![building-overview](building-overview-df.jpg)
+
+The dataset is used as an input for both the cropping image and energy extraction steps.
+
+### Cropping aerial images
+
+The ML-model which I selected for the detection tasks works well for a zoomed in image of a building. Therefore, I need to crop the large aerial image from a single tile into smaller images, having the building of interest in its center with a 5-10m margin around.
+
+But first, we need to open the aerial image itself. This can be done with [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
+The library correctly interprets both the pixel data as georeferencing information, which is is stored as metadata in the JPEG2000 file.
+The pixel data can be accessed from a `4xWxH` tensor, with red, blue, green and infrared channels.
+`W` and `H` are the width and height of the image in pixel units.
+
+```python
+import rasterio
+
+
+building_outline: Polygon # from the previous step
+output_location = Path("./cropped-images")
+
+aerial_image_path = "dop10rgbi_32_280_5652_1_nw_2023.jp2"
+
+with rasterio.open(aerial_image_path) as image_data:
+
+    # transform pixel coordinates to UTM32 coordinates (georeference metadata)
+    affine_transform_px_to_geo = image_data.transform
+
+    building_outline_with_margin = building_outline.envelope.buffer(5.0)
+
+    # pixel area to cut from (holds the bounding box of the cut)
+    crop_window = rasterio.windows.from_bounds(
+                    *building_outline_with_margin.bounds,
+                    transform=affine_transform_px_to_geo,
+                )
+
+    # read the image
+    image_matrix = image_data.read(window=crop_window)
+
+    # ...
+
+    # store the image
+    plt.imsave("building-cut.png", arr=image_matrix, dpi=200)
+```
+
+Additionally to the cropped image, using `affine_transform_px_to_geo` we also transform and store 
+the building outline in pixel coordinates of the cropped image, to filter out detections which fall
+outside the area of the actual building.
+
+
 
 ### Running an ML detector
+
+First 
 
 ### Retrieving solar yield
 
@@ -128,8 +222,24 @@ Similar to the aerial images, the solar yield bitmaps can be processed in a simi
 
 ### Join all information
 
-### Overview
 
+## Case study: X
+
+
+## Summary
+
+
+## Lessons learned and possible improvements
+
+
+- group detect for multiple buildings at once
+- use segmentation models
+- Alternatively, at the detection step
+we could transform the detection box back to UTM32. Store Afiinity Matrix Instead (smaller)
+
+## Similar projects
+
+- https://www.appsilon.com/post/using-ai-to-detect-solar-panels-part-1 (uses segmentation)
 
 ## References
 
