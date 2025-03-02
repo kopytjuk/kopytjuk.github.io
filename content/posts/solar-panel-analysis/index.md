@@ -231,7 +231,7 @@ building_polygon_px_image = shapely.affinity.translate(
 ```
 
 The result of the cropping logic is a folder with images (with building-IDs as filenames) and a
-`overview.csv` table which holds the building polygon coordinates in pixel coordinates:
+`overview.csv` table which holds the building polygon points in pixel coordinates:
 
 ![](image-cropper-output.jpg)
 
@@ -239,7 +239,27 @@ This folder is used as input for the ML-based detector, which we discuss next.
 
 ### Running an ML detector
 
-First 
+In order to avoid training a completely new model, which is a task on its own, I was looking into existing projects with pre-trained models.
+Luckily, there is a 5 year old [GitHub repository](https://github.com/top-on/projects-solar-panel-detection) which contains a structured list of projects.
+
+Below some notes on the my selection criteria while searching for the model:
+
+- Task type: Since my goal was to estimate the installed energy yield, I needed a model to estimate both the position and size of an installed solar panel.
+That means, a classification model, which just provides a binary estimate of an existence if a solar panel in the image is not sufficient. Thus, ideally, the model would solve a **segmentation** task (see [here](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/diagrams/segmentation_predictions.png) for an example).
+- Dependencies: Since the majority of geospatial libraries require at least Python 3.9, I did not want to deal with deprecated tools (e.g. some projects from 2012 used Python 2.7). Thus I looked for projects with modern Python versions.
+- Documentation maturity: I value clear structured code, developer friendly installation instructions and available metrics on models
+
+As you probably expected, life is full of compromises and in the end I selected a project which had a pre-trained model which could run on my machine, even if it did not satisfy all the criteria.
+
+In the end I chose [ArielDrabkin/Solar-Panel-Detector](https://github.com/ArielDrabkin/Solar-Panel-Detector), which contains the model weights, a CLI interface and even a [Gradio](https://www.gradio.app/) GUI application. The app is [hosted](https://huggingface.co/spaces/ArielDrabkin/Solar-Panel-Detector) on Huggingface. A violation of my criteria above, the model is trained to solve a **detection** (not segmentation) task, i.e. it outputs 2D bounding boxes of detected objects in the image.
+
+The following figure shows an areal image from a sample building with two detections with the corresponding confidence scores:
+
+![solar-panel-detector-example](solar-panel-detector-example.png)
+
+TODO: Write about the disadvantage of detection
+
+...
 
 ### Retrieving solar yield
 
