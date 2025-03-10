@@ -191,11 +191,11 @@ with rasterio.open(aerial_image_path) as image_data:
     # transform pixel coordinates to UTM32 coordinates (georeference metadata)
     affine_transform_px_to_geo = image_data.transform
 
-    building_outline_with_margin = building_outline.envelope.buffer(5.0)
+    bounding_box = create_squared_box_around(building_outline, margin_around_building=5.0)
 
     # pixel area to cut from (holds the bounding box of the cut)
     crop_window = rasterio.windows.from_bounds(
-                    *building_outline_with_margin.bounds,
+                    *bounding_box.bounds,
                     transform=affine_transform_px_to_geo,
                 )
 
@@ -282,9 +282,10 @@ Similar to the aerial images, the solar yield bitmaps can be processed in a simi
 - Alternatively, at the detection step
 we could transform the detection box back to UTM32. Store Afiinity Matrix Instead (smaller)
 
-## Similar projects
+## Related projects
 
 - https://www.appsilon.com/post/using-ai-to-detect-solar-panels-part-1 (uses segmentation)
+- [Stanford DeepSolar](https://deepsolar.web.app/)
 
 ## References
 
