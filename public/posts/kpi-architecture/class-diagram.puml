@@ -1,0 +1,84 @@
+@startuml
+left to right direction
+
+package "timeseries artefacts" <<Rectangle>> {
+
+abstract class TimeseriesArtefact{
+  void {abstract} generate(objs: List[Tuple])
+}
+
+class DebugAnimation1{
+  + figureSize: Tuple[float, float]
+  + outputPath: str
+  + format: str = "mp4"
+  + void generate(objs: List[Tuple[Position,Position]])
+}
+
+class DebugAnimation2{
+  + figureSize: Tuple[float, float]
+  + outputPath: str
+  + format: str = "mp4"
+  + void generate(objs: List[Tuple[Position,Position,LidarPoints]])
+}
+
+class MeanDistance{
+  + void generate(objs: List[Tuple[Position,Position]])
+}
+
+TimeseriesArtefact <|-- DebugAnimation1
+TimeseriesArtefact <|-- DebugAnimation2
+TimeseriesArtefact <|-- MeanDistance
+}
+
+package "timestep artefacts" <<Rectangle>> {
+
+abstract class TimestepArtefact{
+  void {abstract} generate(objs: Tuple)
+}
+
+class DebugPlot{
+  + figureSize: Tuple[float, float]
+  + outputPath: str
+  + format: str = "png"
+  + void generate(objs: Tuple[Position,Position,LidarPoints])
+}
+
+class PrintDistance{
+  + format: str = "%.02f"
+  + void generate(objs: Tuple[Position,Position,LidarPoints])
+}
+
+TimestepArtefact <|-- DebugPlot
+TimestepArtefact <|-- PrintDistance
+}
+
+package data <<Rectangle>> {
+
+abstract class EvaluationData {
+  object {abstract} sample(t)
+}
+
+package implementations {
+class AlgorithmOutputImpl1{
+  Position sample(t)
+}
+
+class AlgorithmOutputImpl2{
+  Position sample(t)
+}
+}
+
+class GroundTruth{
+  Position sample(t)
+}
+
+class SensorData{
+  LidarPoints sample(t)
+}
+
+EvaluationData  <|-- AlgorithmOutputImpl1
+EvaluationData  <|-- AlgorithmOutputImpl2
+EvaluationData  <|-- GroundTruth
+EvaluationData  <|-- SensorData
+}
+@enduml

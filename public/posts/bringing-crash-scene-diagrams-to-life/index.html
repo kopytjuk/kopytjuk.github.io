@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Bringing accident scene diagrams to life for AV simulation | Marat&#39;s blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+
+    Table Of Contents
+    
+  
+    Foreword
+    Using NHTSA accidents to improve safety
+    Methodology
+      
+        Step 1: Extracting vehicle shapes from the diagram
+        Step 2: Associate shapes to actual vehicles
+        Step 3: Order waypoints by occurrence
+        Step 4: Generate realistic trajectories
+      
+    
+    Summary (TL;DR;)
+    References
+  
+
+
+Foreword
+When it comes to safety of autonomous vehicles (AV), we as a society often claim that such a system must be safer as an average human driver.
+To validate this requirement, the industry pushes metrics such as accident-free travelled distance, expecting to cover the most critical situations an AV would face.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/bringing-crash-scene-diagrams-to-life/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.f49d66caae9ea0fd43f21f29e71a8d3e284517ed770f2aa86fa012953ad3c9ef.css" integrity="sha256-9J1myq6eoP1D8h8p5xqNPihFF&#43;13Dyqob6ASlTrTye8=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/bringing-crash-scene-diagrams-to-life/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.css" integrity="sha384-MlJdn/WNKDGXveldHDdyRP1R4CTHr3FeuDNfhsLPYrq2t0UBkUdK2jyTnXPEK1NQ" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.js" integrity="sha384-VQ8d8WVFw0yHhCk5E8I86oOhv48xLpnDZx5T9GogA/Y84DcCKWXDmSDfn13bzFZY" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+    onload="renderMathInElement(document.body, 
+    {
+              delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '\\[', right: '\\]', display: true},
+                  {left: '$', right: '$', display: false},
+                  {left: '\\(', right: '\\)', display: false}
+              ]
+          }
+    );"></script>
+
+
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Marat&#39;s blog (Alt + H)">Marat&#39;s blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Bringing accident scene diagrams to life for AV simulation
+    </h1>
+    <div class="post-meta"><span title='2022-11-27 14:30:00 +0200 +0200'>November 27, 2022</span>
+
+</div>
+  </header> 
+  <div class="post-content"><p><img alt="accident" loading="lazy" src="/posts/bringing-crash-scene-diagrams-to-life/accident.jpg"></p>
+<div>
+    <h2>Table Of Contents</h2>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#foreword">Foreword</a></li>
+    <li><a href="#using-nhtsa-accidents-to-improve-safety">Using NHTSA accidents to improve safety</a></li>
+    <li><a href="#methodology">Methodology</a>
+      <ul>
+        <li><a href="#step-1-extracting-vehicle-shapes-from-the-diagram">Step 1: Extracting vehicle shapes from the diagram</a></li>
+        <li><a href="#step-2-associate-shapes-to-actual-vehicles">Step 2: Associate shapes to actual vehicles</a></li>
+        <li><a href="#step-3-order-waypoints-by-occurrence">Step 3: Order waypoints by occurrence</a></li>
+        <li><a href="#step-4-generate-realistic-trajectories">Step 4: Generate realistic trajectories</a></li>
+      </ul>
+    </li>
+    <li><a href="#summary-tldr">Summary (TL;DR;)</a></li>
+    <li><a href="#references">References</a></li>
+  </ul>
+</nav>
+</div>
+<h2 id="foreword">Foreword<a hidden class="anchor" aria-hidden="true" href="#foreword">#</a></h2>
+<p>When it comes to safety of autonomous vehicles (AV), we as a society often claim that such a system must be safer as an average human driver.
+To validate this requirement, the industry pushes metrics such as accident-free travelled distance, expecting to cover the most critical situations an AV would face.</p>
+<p>Unfortunately, the amount of driven distance required to statistically prove the safety of such a system is in the order of 6 billion km [1].
+Even if we reduce the number of (quite expensive) real world tests to a minimum with simulated drives, the process of validating a new software version is still extremely challenging.
+The simulation process must cover a high number of random routes in a simulated world at different weather and traffic conditions.
+Just imagine the effort of modelling a whole city with its traffic network, vegetation, and traffic participants (Grand Theft Auto anyone?).</p>
+<p>Thus, the industry takes a more focussed approach with <strong>scenario-based testing</strong> where the task of driving is separated in smaller chunks such as <em>entering the road</em>,
+<em>driving straight</em>, <em>changing lanes</em> or <em>turning right in an intersection</em>. Having all the scenarios simulated in various conditions,
+the industry hopes to reach the goal of a perfectly safe system. Of course, in those short chunks of driving, for the maximum of realism,
+you still need to model the environment around the scenario, but the effort of modelling an entire city is avoided.</p>
+<p>A valid criticism to the scenario-based approach is the question whether the scenario catalogue (i.e. set of scenarios)
+maintained the developers or regulators will cover all critical situations where an AV could fail.
+To address this concern those catalogues are extended with situations from accidents observed in the past.
+In a manual manner, the AV developers carefully describe the accident in a machine readable format digestible by the simulation tooling.</p>
+<p>This blog post will cover an additional source of crucial scenarios from the NHTSA’s crash data collection program – the Crash Investigation Sampling System (CISS). We will explore a method to make the accidents usable in simulation.</p>
+<p>The fundamental motivation for us is:</p>
+<blockquote>
+<p>An autonomous system behaving well on those critical events shall bring us closer to the safety goal.</p></blockquote>
+<p>Across the next sections we will quickly go over the information available in the above mentioned data source.
+From the scene diagrams we will extract the trajectories (position over time) of all actors involved which then can be used for simulation.</p>
+<h2 id="using-nhtsa-accidents-to-improve-safety">Using NHTSA accidents to improve safety<a hidden class="anchor" aria-hidden="true" href="#using-nhtsa-accidents-to-improve-safety">#</a></h2>
+<p>A few words about the organization behind the data we will use:</p>
+<blockquote>
+<p>The National Highway Traffic Safety Administration (NHTSA), [&hellip;], under the U.S. Department of Transportation,
+is responsible for reducing deaths, injuries and economic losses resulting from motor vehicle crashes.
+This is accomplished by setting and enforcing safety performance standards for motor vehicles and motor vehicle equipment,
+and through grants to state and local governments to enable them to conduct effective local highway safety programs.[2]</p></blockquote>
+<p>The database consists of <strong>11358 highway accidents</strong> involving human injuries. It may be helpful to understand the
+process of &ldquo;sampling&rdquo; the data. The following paragraph is taken from the official website hosted by NHTSA:</p>
+<blockquote>
+<p>After a crash has been sampled, trained Crash Technicians obtain data from crash sites by documenting scene evidence such as <em>skid marks</em>, fluid spills, and struck objects. They locate the <em>vehicles</em> involved, document the crash damage, and identify interior components that were contacted by the occupants. On-site inspections are followed-up with confidential interviews of the crash victims and a review of medical records for injuries sustained in the crash. <em>[&hellip;]</em></p>
+<p>Personal information such as names, addresses, license and registration numbers, and even specific crash locations are not included in public CISS files.</p></blockquote>
+<p>Each accident is visualized in a <em>scene diagram</em>. The diagram shows the traffic participants at multiple points in time throughout the scenario from bird&rsquo;s eye view.</p>
+<figure>
+    <img loading="lazy" src="scene-diagram.png"/> <figcaption>
+            Scene diagram (Case Number: 1-10-2020-130-01) 
+        </figcaption>
+</figure>
+
+<p>In addition to the diagram, NHTSA provides additional information about injuries, vehicle models, datetime etc. on their Crash Viewer:</p>
+<p><figure>
+    <img loading="lazy" src="crash-viewer.png"/> <figcaption>
+            NHTSA Crash Viewer: example case
+        </figcaption>
+</figure>
+
+Given the scene diagram and surrounding meta data from the database, our task is to extract realistic trajectories usable in simulation.</p>
+<h2 id="methodology">Methodology<a hidden class="anchor" aria-hidden="true" href="#methodology">#</a></h2>
+<p>In a nutshell the process of extracting trajectories has the following steps:</p>
+<ol>
+<li>Extract vehicle shapes and labels from scene diagram</li>
+<li>Associate shapes to actual vehicles (i.e. assign vehicle IDs to extracted shapes)</li>
+<li>For each vehicle, order the shape positions by time of occurrence to obtain waypoints</li>
+<li>For each vehicle and its waypoints, generate a realistic (i.e. physically feasible) trajectory</li>
+</ol>
+<p>In the consecutive paragraphs we will go over each step and spend some light on each of them.</p>
+<h3 id="step-1-extracting-vehicle-shapes-from-the-diagram">Step 1: Extracting vehicle shapes from the diagram<a hidden class="anchor" aria-hidden="true" href="#step-1-extracting-vehicle-shapes-from-the-diagram">#</a></h3>
+<p>The scene diagram is provided in two formats: <code>PDF</code> and proprietary <code>BLZ</code> (FARO® Blitz software). The latter can be opened in every text editor and parsed as an XML:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;arasblitzscene&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;data</span> <span style="color:#a6e22e">fileversion=</span><span style="color:#e6db74">&#34;1.0&#34;</span> <span style="color:#a6e22e">exeversion=</span><span style="color:#e6db74">&#34;1.0.0.10&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;canvas</span> <span style="color:#a6e22e">clr=</span><span style="color:#e6db74">&#34;255,255,255,255&#34;</span> <span style="color:#a6e22e">panX=</span><span style="color:#e6db74">&#34;-155.7646&#34;</span> <span style="color:#a6e22e">panY=</span><span style="color:#e6db74">&#34;6.393857&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;grid</span> <span style="color:#a6e22e">gclrclr=</span><span style="color:#e6db74">&#34;255,135,206,235&#34;</span> <span style="color:#a6e22e">aclrclr=</span><span style="color:#e6db74">&#34;255,255,0,0&#34;</span> <span style="color:#a6e22e">space=</span><span style="color:#e6db74">&#34;10&#34;</span> <span style="color:#a6e22e">t=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">axisv=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">v=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">lclr=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">pX=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">pY=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">sizeX=</span><span style="color:#e6db74">&#34;2008.265&#34;</span> <span style="color:#a6e22e">sizeY=</span><span style="color:#e6db74">&#34;1197.521&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;scene</span> <span style="color:#a6e22e">posX=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">posY=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">theta=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">scalex=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">scaley=</span><span style="color:#e6db74">&#34;1&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;layers</span> <span style="color:#a6e22e">count=</span><span style="color:#e6db74">&#34;2&#34;</span> <span style="color:#a6e22e">activendx=</span><span style="color:#e6db74">&#34;1&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;layer</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;Default&#34;</span> <span style="color:#a6e22e">visible=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">locked=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">paint=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">posX=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">posY=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">theta=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">scale=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">lnclr=</span><span style="color:#e6db74">&#34;255,0,0,0&#34;</span> <span style="color:#a6e22e">fillclr=</span><span style="color:#e6db74">&#34;255,0,0,0&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;items</span> <span style="color:#a6e22e">count=</span><span style="color:#e6db74">&#34;64&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;item</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;poly-curve&#34;</span> <span style="color:#a6e22e">clrclr=</span><span style="color:#e6db74">&#34;255,0,0,0&#34;</span> <span style="color:#a6e22e">fclrclr=</span><span style="color:#e6db74">&#34;255,169,169,169&#34;</span> <span style="color:#a6e22e">ds=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">ulclr=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">fill=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">close=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">ssa=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">sea=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">fc=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">as=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">tds=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">tdt=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">tdc=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">tdOC=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">tdOS=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">tdOO=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">tdDT=</span><span style="color:#e6db74">&#34;0.5&#34;</span> <span style="color:#a6e22e">tdDL=</span><span style="color:#e6db74">&#34;10&#34;</span> <span style="color:#a6e22e">tdDS=</span><span style="color:#e6db74">&#34;25&#34;</span> <span style="color:#a6e22e">tdST=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">tdCF=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">tdCR=</span><span style="color:#e6db74">&#34;0.01&#34;</span> <span style="color:#a6e22e">tdCW=</span><span style="color:#e6db74">&#34;0.35&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;pnt</span> <span style="color:#a6e22e">X=</span><span style="color:#e6db74">&#34;337.6161&#34;</span> <span style="color:#a6e22e">Y=</span><span style="color:#e6db74">&#34;-279.2642&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;pnt</span> <span style="color:#a6e22e">X=</span><span style="color:#e6db74">&#34;58.80255&#34;</span> <span style="color:#a6e22e">Y=</span><span style="color:#e6db74">&#34;102.7296&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;pnt</span> <span style="color:#a6e22e">X=</span><span style="color:#e6db74">&#34;-59.16676&#34;</span> <span style="color:#a6e22e">Y=</span><span style="color:#e6db74">&#34;264.2328&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;pnt</span> <span style="color:#a6e22e">X=</span><span style="color:#e6db74">&#34;-233.6886&#34;</span> <span style="color:#a6e22e">Y=</span><span style="color:#e6db74">&#34;503.7234&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;/item&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;item</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;GuardRail&#34;</span> <span style="color:#a6e22e">v=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">pc=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">ulc=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">lo=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">pr=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">ps=</span><span style="color:#e6db74">&#34;10&#34;</span> <span style="color:#a6e22e">pntl=</span><span style="color:#e6db74">&#34;2&#34;</span> <span style="color:#a6e22e">pntd=</span><span style="color:#e6db74">&#34;/CPFQnzUakLq0XvBylFYQw==&#34;</span> <span style="color:#a6e22e">mlclr=</span><span style="color:#e6db74">&#34;255,176,196,222&#34;</span> <span style="color:#a6e22e">mdclr=</span><span style="color:#e6db74">&#34;255,128,64,0&#34;</span> <span style="color:#a6e22e">ds=</span><span style="color:#e6db74">&#34;0.25&#34;</span> <span style="color:#a6e22e">dt=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">dc=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">dOC=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">dOS=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">dOO=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">dDT=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">dDL=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">dDS=</span><span style="color:#e6db74">&#34;10&#34;</span> <span style="color:#a6e22e">dST=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">dCF=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">dCR=</span><span style="color:#e6db74">&#34;0.1&#34;</span> <span style="color:#a6e22e">dCW=</span><span style="color:#e6db74">&#34;0.35&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;item</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;gosmodel&#34;</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;SILVERADO 1500 CREW CAB S/BOX 4X4&#34;</span> <span style="color:#a6e22e">dmgIdx=</span><span style="color:#e6db74">&#34;-1&#34;</span> <span style="color:#a6e22e">agr=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">lclr=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">vis=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">hwb=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">t=</span><span style="color:#e6db74">&#34;2.150799&#34;</span> <span style="color:#a6e22e">pX=</span><span style="color:#e6db74">&#34;45.50632&#34;</span> <span style="color:#a6e22e">pY=</span><span style="color:#e6db74">&#34;71.68256&#34;</span> <span style="color:#a6e22e">sX=</span><span style="color:#e6db74">&#34;18.70079&#34;</span> <span style="color:#a6e22e">sY=</span><span style="color:#e6db74">&#34;6.660105&#34;</span> <span style="color:#a6e22e">bsX=</span><span style="color:#e6db74">&#34;18.1124&#34;</span> <span style="color:#a6e22e">bsY=</span><span style="color:#e6db74">&#34;6.504802&#34;</span> <span style="color:#a6e22e">matFclr=</span><span style="color:#e6db74">&#34;255,192,192,192&#34;</span> <span style="color:#a6e22e">matLclr=</span><span style="color:#e6db74">&#34;255,0,0,0&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#75715e">&lt;!-- ... --&gt;</span><span style="color:#f92672">&lt;/item&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;item</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;label&#34;</span> <span style="color:#a6e22e">round=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">fill=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">borderVis=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">vis=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">lClr=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">arrow=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">ds=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">border=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">arrowS=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">pW=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">sX=</span><span style="color:#e6db74">&#34;0.5&#34;</span> <span style="color:#a6e22e">sY=</span><span style="color:#e6db74">&#34;0.5&#34;</span> <span style="color:#a6e22e">theta=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">clrB=</span><span style="color:#e6db74">&#34;255,255,255,255&#34;</span> <span style="color:#a6e22e">clrL=</span><span style="color:#e6db74">&#34;255,0,0,0&#34;</span> <span style="color:#a6e22e">arrowStart=</span><span style="color:#e6db74">&#34;2&#34;</span> <span style="color:#a6e22e">posX=</span><span style="color:#e6db74">&#34;175.101&#34;</span> <span style="color:#a6e22e">posY=</span><span style="color:#e6db74">&#34;-6.71208&#34;</span> <span style="color:#a6e22e">dimX=</span><span style="color:#e6db74">&#34;26.32889&#34;</span> <span style="color:#a6e22e">dimY=</span><span style="color:#e6db74">&#34;19.88727&#34;</span> <span style="color:#a6e22e">arrowEndX=</span><span style="color:#e6db74">&#34;NaN&#34;</span> <span style="color:#a6e22e">arrowEndY=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">padX=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">padY=</span><span style="color:#e6db74">&#34;0&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;text</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;textp&#34;</span> <span style="color:#a6e22e">lclr=</span><span style="color:#e6db74">&#34;F&#34;</span> <span style="color:#a6e22e">vis=</span><span style="color:#e6db74">&#34;T&#34;</span> <span style="color:#a6e22e">t=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">s=</span><span style="color:#e6db74">&#34;4&#34;</span> <span style="color:#a6e22e">posX=</span><span style="color:#e6db74">&#34;166.5719&#34;</span> <span style="color:#a6e22e">posY=</span><span style="color:#e6db74">&#34;-3.942969&#34;</span> <span style="color:#a6e22e">dimX=</span><span style="color:#e6db74">&#34;26.32889&#34;</span> <span style="color:#a6e22e">dimY=</span><span style="color:#e6db74">&#34;19.88727&#34;</span> <span style="color:#a6e22e">matclr=</span><span style="color:#e6db74">&#34;255,0,0,0&#34;</span> <span style="color:#a6e22e">txt=</span><span style="color:#e6db74">&#34;Event 1&#34;</span> <span style="color:#a6e22e">fFN=</span><span style="color:#e6db74">&#34;Arial&#34;</span> <span style="color:#a6e22e">fSize=</span><span style="color:#e6db74">&#34;3.343832&#34;</span> <span style="color:#a6e22e">fStyle=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#a6e22e">txtSW=</span><span style="color:#e6db74">&#34;17.05804&#34;</span> <span style="color:#a6e22e">txtSH=</span><span style="color:#e6db74">&#34;5.53822&#34;</span> <span style="color:#a6e22e">alignV=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#a6e22e">alignH=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&lt;/item&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">&lt;!-- more items ... --&gt;</span>
+</span></span></code></pre></div><p>Usually, the vehicles are denoted as items of <code>type=&quot;gosmodel&quot;</code>, the (human) annotations such as <em>Event 1</em> are encoded as <code>type=&quot;label&quot;</code> and the road markings are of <code>type=&quot;poly-curve&quot;</code>.</p>
+<p>Both the vehicles and annotation elements can be represented as a rectangle:</p>
+<ul>
+<li>sizes in X and Y direction: <code>sX</code>, <code>sY</code></li>
+<li>heading angle <code>t</code> in radians.</li>
+</ul>
+<p>The parsing logic is implemented and available <a href="https://github.com/kopytjuk/nhtsa-ciss-python">on GitHub</a>.</p>
+<h3 id="step-2-associate-shapes-to-actual-vehicles">Step 2: Associate shapes to actual vehicles<a hidden class="anchor" aria-hidden="true" href="#step-2-associate-shapes-to-actual-vehicles">#</a></h3>
+<p>Having represented vehicles and annotation as rectangles, we can easily pair them by checking the intersection.
+This can be efficiently implemented via <code>shapely</code>&rsquo;s <code>intersection()</code> method (refer to <a href="https://shapely.readthedocs.io/en/stable/manual.html#object.intersection">docs</a>).</p>
+<p>For shapes without a label on top (this issue is true in some diagrams, like the truck in the center of diagram),
+a human has to intervene and add the corresponding pairing manually. For simplicity this pairing is done in a tiny excel table, where we set some assignments to <code>TRUE</code> or <code>FALSE</code>:</p>
+<figure>
+    <img loading="lazy" src="human-assignment.png"/> <figcaption>
+            Assignment via excel and a diagram with numbered vehicle shapes, lane markings and labels. The shape numbers are green (S0-S19).
+        </figcaption>
+</figure>
+
+<h3 id="step-3-order-waypoints-by-occurrence">Step 3: Order waypoints by occurrence<a hidden class="anchor" aria-hidden="true" href="#step-3-order-waypoints-by-occurrence">#</a></h3>
+<p>Next, having the vehicle locations in the diagram we will order them in time. The task is relatively straightforward for us humans,
+since we see the direction of the road, we see where the collision happened and can easily imagine the temporal order of events (from bottom right to top left).</p>
+<p>However, this ordering shall be done in automated manner. Note that since the diagrams were created (drawn) by human technicians,
+there is no sequence numbering included in the <code>.blz</code> file which we could use.</p>
+<p>If we formulate the ordering problem as a <strong>graph</strong> with:</p>
+<ul>
+<li>vehicle positions as vertices and</li>
+<li>the <a href="https://en.wikipedia.org/wiki/Energy"><em>energy</em></a> needed to transition between position as edges</li>
+</ul>
+<p>we can use algorithms solving the <a href="https://en.wikipedia.org/wiki/Travelling_salesman_problem">Travelling Salesman Problem</a> to find the right order:</p>
+<blockquote>
+<p>The travelling salesman problem (TSP) asks the following question: <em>Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once [&hellip;]?</em>&quot;</p></blockquote>
+<p>The TSP solution will lead us to the most energy efficient (and thus most likely the actual) order of vehicle locations.</p>
+<p>The following image shall provide a small example of the <em>energy graph</em>:</p>
+<figure>
+    <img loading="lazy" src="pose-ordering-energy.png"/> <figcaption>
+            Vehicle positions with velocities and required energy to transition between them. The corresponding graph is represented on the top left.
+        </figcaption>
+</figure>
+
+<p>For the rest of this post I will use the term <em>waypoints</em> to refer to the ordered list of vehicle locations.</p>
+<p><em>&gt; In case you are not interested in the implementation details, feel free to jump straight to Step 4!</em></p>
+<hr>
+<p>Now we will elaborate a little on the energy computation and the TSP implementation details.</p>
+<p>Note, that the distance alone is not the only factor for the required energy. To accomplish <code>A ← B</code> you have to decelerate to full stop (i.e. spend energy) and drive reverse.
+Alternatively, you need to drive a circle to come back. Driving from <code>A → B</code> however needs far less energy –
+the vehicle solely faces <a href="https://en.wikipedia.org/wiki/Drag_(physics)">air resistance</a>
+and <a href="https://en.wikipedia.org/wiki/Rolling_resistance">road friction</a> (which is needed for the former case, of course).</p>
+<p>The model used for the energy computation between two states (with distance $\Delta d$ and angle difference $\Delta\theta$):</p>
+<p>$$
+E_{driving}(\Delta d) = F_\mu \Delta d = m g \mu \Delta d \\
+E_{rotating}(\Delta\theta) = F_\mu \frac{L}{2} \Delta\theta = m g \mu \frac{L}{2} \Delta\theta
+$$</p>
+<p>with mass of the object $m=2000kg$, friction $\mu=1.0$ its length $L=4.5$.</p>
+<p>The TSP algorithm is implemented in the <code>approximation.traveling_salesman_problem</code> function of the <code>networkx</code> library
+(<a href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.approximation.traveling_salesman.traveling_salesman_problem.html">docs</a>).
+Additionally, we set <code>cycle=False</code>, since we do not want to close the loop to the starting location.</p>
+<p>Note, that this approach can be extended with a more sophisticated model and/or edge weight (cost) function.
+This may be needed in complex situations (e.g. states before and after collision).</p>
+<h3 id="step-4-generate-realistic-trajectories">Step 4: Generate realistic trajectories<a hidden class="anchor" aria-hidden="true" href="#step-4-generate-realistic-trajectories">#</a></h3>
+<p>Next, we need to derive a set of trajectories - one for each actor. As stated before,
+the trajectories have to be physically feasible and pass the waypoints ordered previously.
+In the following animation the four resulting vehicle trajectories are visualized:</p>
+<div class="container">
+    <div id="player-wrapper" class="test" ></div>
+  </div>
+  
+  <script 
+    type="text/javascript" 
+    src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"
+  >
+  </script>
+  
+  <script>
+    var playerElement = document.getElementById("player-wrapper");
+  
+    var player = new Clappr.Player({
+      source: "20201010130-cartesian.mp4",
+      mute: true,
+      height:  450 ,
+      width:  500 
+    });
+  
+    player.attachTo(playerElement);  
+  </script>
+<p>Since we try to generate a <em>trajectory</em> and not only the <em>path</em> (i.e. locations with vs. without timestamps), we need to add <strong>time</strong> to our waypoints.</p>
+<p>Due to the nature of the diagram, unfortunately there is no time information available in the <code>.blz</code> file.
+Thus, we need to manually select plausible timestamps considering the information from CISS database (e.g. speed limit or case description).
+In this example, we set $\Delta T = 2s$ as constant time periods between waypoints.</p>
+<p>One way to create trajectories is to formulate a <a href="http://underactuated.mit.edu/trajopt.html#section1">trajectory opitmization problem</a>
+given the waypoints and their timestamps as constrains. Additionally, the cost function $J$ for that problem shall favour human acceleration and steering behaviour.
+Therefore we would need to employ a mathematical vehicle model and solve a quite computationally challenging problem.</p>
+<p>A far more simple and faster but not necessarily realistic approach is to fit two <a href="https://en.wikipedia.org/wiki/Spline_interpolation">spline functions</a> over time:</p>
+<p>$$
+x(t) = f(t; \bold w_x) \\
+y(t) = f(t; \bold w_y)
+$$</p>
+<p>Note that the time $t$ is the argument for both of the functions.</p>
+<p>We find the spline parameters $\bold w_x$ by fitting the spline to the waypoints ($t$ and $x$ in particular):</p>
+<p>$$
+w^{i} = (t^i, x^i, y^i) \ \forall i \in [1 &hellip; N]
+$$</p>
+<p>For a better result, we can provide the initial and final velocities $v_0, v_f$ (speed limit from the database and 0) as constraints to the fitting algorithm.
+For this post <code>scipy.interpolate.make_interp_spline</code> with <code>k=3</code> (cubic polynoms) was used for fitting the trajectories.</p>
+<p>In some cases, dependent on chosen $\Delta T$ or velocities $v_0, v_f$, the computed trajectories are not plausible (e.g. deceleration without obvious reasons, like V4 at <code>0:02</code>) or even worse, physically infeasible.
+The physical feasibility can be checked in automated manner on the curvature or acceleration/velocity signal of the trajectory.
+To address those issues, repeat the fitting process with different timestamps and velocities. The idea for this iterative process was taken from [4].</p>
+<h2 id="summary-tldr">Summary (TL;DR;)<a hidden class="anchor" aria-hidden="true" href="#summary-tldr">#</a></h2>
+<p>This blog post outlines the methodology to convert scene diagrams from the NHTSA accident database to machine readable trajectories.
+The extracted trajectories of the actors involved can be used for simulation of ADAS systems or self-driving vehicles.
+Simulating &gt;11000 accidents can support the development of the behaviour of automated systems in critical or unforeseen scenarios.</p>
+<h2 id="references">References<a hidden class="anchor" aria-hidden="true" href="#references">#</a></h2>
+<ol>
+<li>Wachenfeld, W., Winner, H. (2016). The Release of Autonomous Vehicles, section 21.5.2 (<a href="https://link.springer.com/chapter/10.1007/978-3-662-48847-8_21">Springer</a>)</li>
+<li>NHTSA Mission: <a href="https://one.nhtsa.gov/About-NHTSA/Who-We-Are-and-What-We-Do">https://one.nhtsa.gov/About-NHTSA/Who-We-Are-and-What-We-Do</a></li>
+<li>NHTSA CISS homepage: <a href="https://www.nhtsa.gov/crash-data-systems/crash-investigation-sampling-system">https://www.nhtsa.gov/crash-data-systems/crash-investigation-sampling-system</a></li>
+<li>M. Werling, J. Ziegler, S. Kammel and S. Thrun (2010), Optimal trajectory generation for dynamic street scenarios in a Frenét Frame (<a href="https://ieeexplore.ieee.org/document/5509799">IEEE</a>)</li>
+<li>GitHub repository: <a href="https://github.com/kopytjuk/nhtsa-ciss-python">https://github.com/kopytjuk/nhtsa-ciss-python</a></li>
+</ol>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">Marat&#39;s blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

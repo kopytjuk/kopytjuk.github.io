@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Marat&#39;s blog</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content on Marat&#39;s blog</description>
+    <generator>Hugo -- 0.145.0</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Nov 2022 14:30:00 +0200</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Bringing accident scene diagrams to life for AV simulation</title>
+      <link>http://localhost:1313/posts/bringing-crash-scene-diagrams-to-life/</link>
+      <pubDate>Sun, 27 Nov 2022 14:30:00 +0200</pubDate>
+      <guid>http://localhost:1313/posts/bringing-crash-scene-diagrams-to-life/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;accident&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/bringing-crash-scene-diagrams-to-life/accident.jpg&#34;&gt;&lt;/p&gt;
+&lt;div&gt;
+    &lt;h2&gt;Table Of Contents&lt;/h2&gt;
+    &lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#foreword&#34;&gt;Foreword&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#using-nhtsa-accidents-to-improve-safety&#34;&gt;Using NHTSA accidents to improve safety&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#methodology&#34;&gt;Methodology&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#step-1-extracting-vehicle-shapes-from-the-diagram&#34;&gt;Step 1: Extracting vehicle shapes from the diagram&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#step-2-associate-shapes-to-actual-vehicles&#34;&gt;Step 2: Associate shapes to actual vehicles&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#step-3-order-waypoints-by-occurrence&#34;&gt;Step 3: Order waypoints by occurrence&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#step-4-generate-realistic-trajectories&#34;&gt;Step 4: Generate realistic trajectories&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#summary-tldr&#34;&gt;Summary (TL;DR;)&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#references&#34;&gt;References&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;foreword&#34;&gt;Foreword&lt;/h2&gt;
+&lt;p&gt;When it comes to safety of autonomous vehicles (AV), we as a society often claim that such a system must be safer as an average human driver.
+To validate this requirement, the industry pushes metrics such as accident-free travelled distance, expecting to cover the most critical situations an AV would face.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>An extensible and modular architecture for evaluation of dynamic systems in real world environments</title>
+      <link>http://localhost:1313/posts/kpi-architecture/</link>
+      <pubDate>Mon, 21 Mar 2022 11:00:00 +0100</pubDate>
+      <guid>http://localhost:1313/posts/kpi-architecture/</guid>
+      <description>&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;Evaluating complex systems operating in noisy real world environments is hard. Especially if you are dealing with dynamic behaviour over time, the requirements to the evaluation toolchain grow with every novel insight. In the beginning, you just want to compute just a single number describing algorithm&amp;rsquo;s performance (like mean squared error - &lt;em&gt;MSE&lt;/em&gt;), but over the project&amp;rsquo;s lifetime your requirements to the evaluation framework grow: at some point you wish to generate static visualizations, create reports over a time range, dig deep at some specific situations or simply render both the algorithm&amp;rsquo;s output and the corresponding &lt;em&gt;ground-truth&lt;/em&gt; (GT) in a video file for human analysis.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Vehicle trajectory analysis in Frenet-Serret coordinates on the Large-Scale Roundabout Drone Dataset (OpenDD)</title>
+      <link>http://localhost:1313/posts/open-dd-analysis/</link>
+      <pubDate>Sun, 06 Mar 2022 12:00:00 +0100</pubDate>
+      <guid>http://localhost:1313/posts/open-dd-analysis/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;title&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/open-dd-analysis/title.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;tldr&#34;&gt;TL;DR; &lt;/h2&gt;
+&lt;p&gt;This blog post presents the benefits of Frenet-Serret coordinate system for driving trajectory analysis (in Python). This system is defined by a reference path, such as a driving lane and facilitates traffic analysis. As an showcase example, the delay times and distances between vehicles in a roundabout setting are analyzed. The trajectories captured from a bird-view perspective (DJI drone) from the OpenDD dataset are used. In the end of the post, the reader will value the advantages of Frenet-Serret frames compared to a conventional metric approach when it comes to trajectory analysis in a real-world setting. Moreover, you will have a handy mathematical tool to detect tipsy drivers!&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Wrap C&#43;&#43; algorithms in Python for pre-production evaluation and experimentation.</title>
+      <link>http://localhost:1313/posts/wrapping-cpp-algorithms/</link>
+      <pubDate>Mon, 13 Sep 2021 11:19:40 +0100</pubDate>
+      <guid>http://localhost:1313/posts/wrapping-cpp-algorithms/</guid>
+      <description>&lt;h2 id=&#34;tldr&#34;&gt;TLDR;&lt;/h2&gt;
+&lt;p&gt;In &lt;em&gt;model based design&lt;/em&gt; paradigm one often implements a proof-of-concept solution in a scripting language before porting the logic to a more performant low-level language like C/C++.
+This article describes the benefits of calling production-ready (C/C++) ports in Python for &lt;strong&gt;functional&lt;/strong&gt; evaluation and analysis. Assessment tools developed previously during the experimentation stage can be reused. Furthermore, the complexity for experimentation with various internal parameters is reduced, which can optimize costs and expensive debugging prior to the final deployment. In the end of the article the key benefits and limitations are presented.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>[Medium] From C to machine code — demystifying CPU mechanics</title>
+      <link>http://localhost:1313/posts/from-c-to-machine/</link>
+      <pubDate>Thu, 05 Dec 2019 18:00:00 +0100</pubDate>
+      <guid>http://localhost:1313/posts/from-c-to-machine/</guid>
+      <description>&lt;p&gt;Read the article on &lt;a href=&#34;https://medium.com/@kopytjuk/from-c-to-machine-code-demystifying-cpu-mechanics-e5d4cf967e8&#34;&gt;Medium&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>[Medium] Simulating non-linear dynamic systems with Python</title>
+      <link>http://localhost:1313/posts/simulating-dynamic-systems/</link>
+      <pubDate>Fri, 08 Nov 2019 18:00:00 +0100</pubDate>
+      <guid>http://localhost:1313/posts/simulating-dynamic-systems/</guid>
+      <description>&lt;p&gt;Read the article on &lt;a href=&#34;https://towardsdatascience.com/on-simulating-non-linear-dynamic-systems-with-python-or-how-to-gain-insights-without-using-ml-353eebf8dcc3&#34;&gt;Medium&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>[Medium] On Understanding of Central Limit Theorem (visually)</title>
+      <link>http://localhost:1313/posts/central-limit-theorem/</link>
+      <pubDate>Mon, 28 Oct 2019 18:00:00 +0100</pubDate>
+      <guid>http://localhost:1313/posts/central-limit-theorem/</guid>
+      <description>&lt;p&gt;Read the article on &lt;a href=&#34;https://medium.com/analytics-vidhya/on-understanding-of-central-limit-theorem-visually-f70f9b0c02dc&#34;&gt;Medium&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>[Medium] Sum of two random variables or the rocky path to understanding convolutions of probability distributions</title>
+      <link>http://localhost:1313/posts/sum-two-rand-vars/</link>
+      <pubDate>Thu, 03 Oct 2019 18:00:00 +0100</pubDate>
+      <guid>http://localhost:1313/posts/sum-two-rand-vars/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://www.youtube.com/watch?v=U84pzAQRJfo&#34;&gt;&lt;img alt=&#34;Convolution&#34; loading=&#34;lazy&#34; src=&#34;https://img.youtube.com/vi/U84pzAQRJfo/0.jpg&#34;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Read the article on &lt;a href=&#34;https://medium.com/analytics-vidhya/sum-of-two-random-variables-or-the-rocky-path-to-understanding-convolutions-of-probability-b0fc29aca3b5&#34;&gt;Medium&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/disclaimer/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/disclaimer/</guid>
+      <description>&lt;h1 id=&#34;disclaimer&#34;&gt;Disclaimer&lt;/h1&gt;
+&lt;p&gt;Last updated: March 21, 2022&lt;/p&gt;
+&lt;h1 id=&#34;interpretation-and-definitions&#34;&gt;Interpretation and Definitions&lt;/h1&gt;
+&lt;h2 id=&#34;interpretation&#34;&gt;Interpretation&lt;/h2&gt;
+&lt;p&gt;The words of which the initial letter is capitalized have meanings defined under the following conditions.
+The following definitions shall have the same meaning regardless of whether they appear in singular or in plural.&lt;/p&gt;
+&lt;h2 id=&#34;definitions&#34;&gt;Definitions&lt;/h2&gt;
+&lt;p&gt;For the purposes of this Disclaimer:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Company&lt;/strong&gt; (referred to as either &amp;ldquo;the Company&amp;rdquo;, &amp;ldquo;We&amp;rdquo;, &amp;ldquo;Us&amp;rdquo; or &amp;ldquo;Our&amp;rdquo; in this Disclaimer) refers to Marat&#39;s blog.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Service&lt;/strong&gt; refers to the Website.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;You&lt;/strong&gt; means the individual accessing the Service, or the company, or other legal entity on behalf of which such individual is accessing or using the Service, as applicable.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Website&lt;/strong&gt; refers to Marat&#39;s blog, accessible from &lt;a href=&#34;kopytjuk.github.io&#34;&gt; kopytjuk.github.io&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;disclaimer-1&#34;&gt;Disclaimer&lt;/h1&gt;
+&lt;p&gt;The information contained on the Service is for general information purposes only.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>About</title>
+      <link>http://localhost:1313/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/about/</guid>
+      <description>&lt;p&gt;My name is Marat, I was born in the early 90&amp;rsquo;s in Witebsk (Belarus), currently work and live in Heilbronn (South Germany). I studied mechatronics for Bachelors, and Automated Driving for Masters degree.&lt;/p&gt;
+&lt;p&gt;I see myself as an interdisciplinary developer who believes that combining cross-domain expertise in mechatronical systems, robotics, software engineering, cloud and probability theory is essential towards inspiring, efficient, future-proof and reliable products.&lt;/p&gt;
+&lt;p&gt;I enjoy teaching, insightful visualizations and well written books. In my free time I like to spend time on the couch after a run, watch movies and
+(when there is time left) play RPG videogames.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
