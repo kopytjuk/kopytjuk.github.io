@@ -224,7 +224,7 @@ This folder is used as input for the solar-panel detector, which we discuss next
 
 The solar panel detector is responsible to detect solar panels in (cropped) aerial images. For this project
 I extended the [gabrieltseng/solar-panel-segmentation](https://github.com/gabrieltseng/solar-panel-segmentation)
-repository. The repository contains code for training and evaluating a machine-learning based **segmentation** model 
+repository. The repository contains code for training and evaluating a machine-learning based segmentation model 
 which identifies the locations of solar panels from satellite (or aerial) imagery. 
 
 A ML-based segmentation model usually has two parts: an encoder and a decoder. 
@@ -235,11 +235,11 @@ For further details, please refer to [segmenter.py](https://github.com/gabrielts
 I chose the project because it had a well structured code, detailed installation instructions and good segmentation performance.
 According to the README, the model achieves a precision of 98.8%, and a recall of 97.7% using a threshold of 0.5 on the test dataset which was not used in the training.
 
-Semantic Segmentation is a computer vision task in which the goal is to categorize each pixel in an image into a class or object.
+**Semantic segmentation** is a computer vision task in which the goal is to categorize each pixel in an image into a class or object.
 The goal is to produce a dense pixel-wise segmentation map of an image, where each pixel is assigned to a specific class or object.
 For the solar-panel detector a single label - existence of a solar panel - is assigned.
-Since we are only interested in the installed **area** and do not want to count the number of individual solar panels.
-Thus [*semantic*](https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation) segmentation (instead of *instance* segmentation) is sufficient.
+Since we are only interested in the installed **area** and do not want to count the number of individual solar panels
+ [*semantic*](https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation) segmentation (instead of *instance* segmentation) is sufficient.
 
 Let's take a look at a single segmentation result using the above mentioned model:
 
