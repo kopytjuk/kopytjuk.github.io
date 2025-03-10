@@ -115,7 +115,7 @@ where we use the final table to analyze the installation rate of a small village
 
 ### Extracting building outlines
 
-First, we need to extract all buildings which exist in a single geographical area. For that, we will use
+First, we need to extract all buildings which exist in the desired geographical area. For that, we will use
 the OSMnx library, a Python package to access street networks and other geospatial features (such as buildings in our case) 
 from OSM:
 
@@ -168,7 +168,9 @@ The dataset is used as an input for both the cropping image and energy extractio
 
 ### Cropping aerial images
 
-The ML-model which I selected for the detection tasks works well for a zoomed in image of a building. Therefore, I need to crop the large aerial image from a single tile into smaller images, having the building of interest in its center with a 5-10m margin around.
+The ML-model which I selected for the detection tasks works well for a zoomed in image of a building. Therefore, 
+I need to crop the large aerial image from a single tile into smaller images, having the building of interest 
+in its center with a 5-10m margin around.
 
 To open the aerial image we will use the [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
 The library interprets both the pixel data as georeferencing information, which is is stored as metadata in the JPEG2000 file.
@@ -208,58 +210,57 @@ with rasterio.open(aerial_image_path) as image_data:
     plt.imsave("building-cut.png", arr=image_matrix, dpi=200)
 ```
 
-Additionally to the cropped image, using `affine_transform_px_to_geo` object we transform 
-the building outline to pixel coordinates of the cropped image. The transformed polygon is later used
-to filter out detections which fall outside the area of the actual building:
-
-```python
-# invert
-affine_transform_geo_to_px = ~affine_transform_px_to_geo
-
-# convert to a structure used by shapely
-affine_transform_for_shapely = affine_transform_geo_to_px.to_shapely()
-
-# polygon in pixel coordinates of the full tile
-building_polygon_px = shapely.affinity.affine_transform(
-    building_polygon, affine_transform_for_shapely
-)
-
-# polygon in the pixel coordinates of the cropped image
-building_polygon_px_image = shapely.affinity.translate(
-    building_polygon_px, -crop_window.col_off, -crop_window.row_off
-)
-```
+Additionally to the cropped image itself, the **affine transformation** from UTM coordinates to the pixel coordinates is stored.
+Together with image sizes it allows to compute the cropped area. This information will be used in the energy extraction step.
 
 The result of the cropping logic is a folder with images (with building-IDs as filenames) and a
-`overview.csv` table which holds the building polygon points in pixel coordinates:
+`overview.csv` table which holds the transformations and sizes:
 
 ![](image-cropper-output.jpg)
 
-This folder is used as input for the ML-based detector, which we discuss next.
+This folder is used as input for the solar-panel detector, which we discuss next.
 
-### Running an ML detector
+### Running solar panel segmentation
 
-In order to avoid training a completely new model, which is a task on its own, I was looking into existing projects with pre-trained models.
-Luckily, there is a 5 year old [GitHub repository](https://github.com/top-on/projects-solar-panel-detection) which contains a structured list of projects.
+The solar panel detector is responsible to detect solar panels in (cropped) aerial images. For this project
+I extended the [gabrieltseng/solar-panel-segmentation](https://github.com/gabrieltseng/solar-panel-segmentation)
+repository. The repository contains code for training and evaluating a machine-learning based **segmentation** model 
+which identifies the locations of solar panels from satellite (or aerial) imagery. 
 
-Below some notes on the my selection criteria while searching for the model:
+A ML-based segmentation model usually has two parts: an encoder and a decoder. 
+For the former a [ResNet34](https://en.wikipedia.org/wiki/Residual_neural_network) base was used.
+For the latter parts of [U-Net](https://en.wikipedia.org/wiki/U-Net) architecture were implemented.
+For further details, please refer to [segmenter.py](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/solarnet/models/segmenter.py).
 
-- Task type: Since my goal was to estimate the installed energy yield, I needed a model to estimate both the position and size of an installed solar panel.
-That means, a classification model, which just provides a binary estimate of an existence if a solar panel in the image is not sufficient. Thus, ideally, the model would solve a **segmentation** task (see [here](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/diagrams/segmentation_predictions.png) for an example).
-- Dependencies: Since the majority of geospatial libraries require at least Python 3.9, I did not want to deal with deprecated tools (e.g. some projects from 2012 used Python 2.7). Thus I looked for projects with modern Python versions.
-- Documentation maturity: I value clear structured code, developer friendly installation instructions and available metrics on models
+I chose the project because it had a well structured code, detailed installation instructions and good segmentation performance.
+According to the README, the model achieves a precision of 98.8%, and a recall of 97.7% using a threshold of 0.5 on the test dataset which was not used in the training.
 
-As you probably expected, life is full of compromises and in the end I selected a project which had a pre-trained model which could run on my machine, even if it did not satisfy all the criteria.
+Semantic Segmentation is a computer vision task in which the goal is to categorize each pixel in an image into a class or object.
+The goal is to produce a dense pixel-wise segmentation map of an image, where each pixel is assigned to a specific class or object.
+For the solar-panel detector a single label - existence of a solar panel - is assigned.
+Since we are only interested in the installed **area** and do not want to count the number of individual solar panels.
+Thus [*semantic*](https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation) segmentation (instead of *instance* segmentation) is sufficient.
 
-In the end I chose [ArielDrabkin/Solar-Panel-Detector](https://github.com/ArielDrabkin/Solar-Panel-Detector), which contains the model weights, a CLI interface and even a [Gradio](https://www.gradio.app/) GUI application. The app is [hosted](https://huggingface.co/spaces/ArielDrabkin/Solar-Panel-Detector) on Huggingface. A violation of my criteria above, the model is trained to solve a **detection** (not segmentation) task, i.e. it outputs 2D bounding boxes of detected objects in the image.
+Let's take a look at a single segmentation result using the above mentioned model:
 
-The following figure shows an areal image from a sample building with two detections with the corresponding confidence scores:
+![segmentation-example](./segmentation-example.jpg)
 
-![solar-panel-detector-example](solar-panel-detector-example.png)
+The figure shows the input and outputs of the segentation process. The left image is the input to the segmentation model. The red building outline is added for inspection purposes.
 
-TODO: Write about the disadvantage of detection
+The bitmap in the middle shows the raw output from the model, where each pixel holds the probability for the existence of a solar panel, between 0 (dark blue) and 1 (yellow).
 
-...
+In order to employ the result for energy yield estimation we need a **binary value** for each pixel, indicating whether a solar panel is installed or not. 
+A simple method is [thresholding](https://en.wikipedia.org/wiki/Thresholding_(image_processing)) applied on top of the segmented image. 
+Values above the threshold indicate that a solar panel is installed, values below indicate the contrary.
+The image on the right shows the result of using the threshold of 0.5, where yellow pixels indicate, that a solar panel is available.
+
+Looking at the result, we can see that some of the pixels are classified incorrectly. One reason for those mistakes can be the mismatch between the training data and the input data 
+we are ingesting into the model after it is trained (i.e. the **inference** of the model).
+
+The training data used for training the model is satellite imagery from United States Geological Survey (USGS), which provides extensive collection of [publicly available](https://earthexplorer.usgs.gov/)
+high-resolution aerial orthoimagery from across the United States. It can be the case, that the roof materials and shapes in Germany are different to the ones in the US, leading to errors.
+There can also be a difference in camera hardware, which representents colors in a slightly different way.
+
 
 ### Retrieving solar yield
 
@@ -290,3 +291,27 @@ we could transform the detection box back to UTM32. Store Afiinity Matrix Instea
 ## References
 
 [1] [LANUV Info 43](https://www.energieatlas.nrw.de/site/service/download_publikationen) (PDF)
+
+## Appendix
+
+### Selecting ML detector
+
+In order to avoid training a completely new model, which is a task on its own, I was looking into existing projects with pre-trained models.
+
+Below some notes on the my selection criteria while searching for the model:
+
+- Task type: Since my goal was to estimate the installed energy yield, I needed a model to estimate both the position and size of an installed solar panel.
+That means, a classification model, which just provides a binary estimate of an existence if a solar panel in the image is not sufficient. Thus, ideally, the model would solve a **segmentation** task (see [here](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/diagrams/segmentation_predictions.png) for an example).
+- Dependencies: Since the majority of geospatial libraries require at least Python 3.9, I did not want to deal with deprecated tools (e.g. some projects from 2012 used Python 2.7). Thus I looked for projects with modern Python versions.
+- Documentation maturity: I value clear structured code, developer friendly installation instructions and available metrics on models
+
+
+In the end I chose [ArielDrabkin/Solar-Panel-Detector](https://github.com/ArielDrabkin/Solar-Panel-Detector), which contains the model weights, a CLI interface and even a [Gradio](https://www.gradio.app/) GUI application. The app is [hosted](https://huggingface.co/spaces/ArielDrabkin/Solar-Panel-Detector) on Huggingface. A violation of my criteria above, the model is trained to solve a **detection** (not segmentation) task, i.e. it outputs 2D bounding boxes of detected objects in the image.
+
+The following figure shows an areal image from a sample building with two detections with the corresponding confidence scores:
+
+![solar-panel-detector-example](solar-panel-detector-example.png)
+
+TODO: Write about the disadvantage of detection
+
+...
