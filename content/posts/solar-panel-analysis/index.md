@@ -11,41 +11,40 @@ math: true
 Have you ever wondered how many households in your neighborhood have a solar panel on their roof and 
 how much solar energy is being harnessed?
 
-By combining the power of maps, aerial imagery, solar energy data and machine learning we can address those
-questions. In this post I will discuss the technical method detecting solar panels on roofs from aerial images and estimating the energy yield.
-In the next post we will run the method on a larger village and inspect the results.
+By combining the power of aerial imagery, solar radiation maps and machine learning we can address those
+questions. In this post I will introduce an approach of estimating the annual energy yield for buildings 
+based on the amount of installed solar panels.
+
+In the Part 2 of this post we will run the method on a larger area (e.g. city or village) and discuss the results.
+
+As a tiny appetizer, in the figure below you see an arial photograph of Titz, North Rhine-Westphalia with 
+a almost-transparent overlay highlighting whether a solar panel is installed (green) or not (purple):
 
 ![header](header-319-5653.jpg)
 
-In the image above you see an arial photograph of Titz, North Rhine-Westphalia with 
-a almost-transparent overlay highlighting whether a solar panel is installed (green) or not (purple).
-
 ## Datasets
 
-The data for this analysis is downloaded from the [OpenGeodata.NRW](https://www.opengeodata.nrw.de/produkte/) portal. 
-
-The OpenGeoData NRW portal is maintained by the state government of North Rhine-Westphalia (NRW) in Germany. 
-It serves as a platform for providing open geospatial data to the public, 
-aligning with the principles of Open Government, which emphasize transparency and public participation.
+The main source for the described approach is based on the publicly available 
+datasets from the [OpenGeodata.NRW](https://www.opengeodata.nrw.de/produkte/) portal. 
+The OpenGeoData NRW portal is maintained by the state government of North Rhine-Westphalia (NRW) in Germany.
 
 The portal offers a wide range of geospatial data, including high-resolution aerial images,
 LIDAR measurements, land-property and solar yield maps.
 Based on LIDAR data, also derived datasets such as digital surface and terrain models are provided.
 
-However, in this blog post the focus of this analysis will be on aerial images and solar yield maps.
-The next two sections will provide a basic introduction into both data types.
+We will focus on two particular data types, namely **orthophotographs** and **radiant exposure** maps, 
+which we briefly explore in subsequent sections.
 
 ### Aerial images
 
 Aerial photography (or airborne imagery) is the taking of photographs from an aircraft or other airborne platforms such as drones.
 An aerial image is usually converted to an [**orthophotograph**](https://en.wikipedia.org/wiki/Orthophoto) in a process called
 **orthorectification**. Unlike an uncorrected aerial photograph, an orthophoto can be used to measure true distances. In other words,
-when we measure the distance between two trees, we can multiple the value in pixel with a known scaling factor to obtain the true distance in meters.
+when we measure the distance between two trees, we can multiple the length value in pixels 
+with a known scaling factor to obtain the true distance in meters.
 
 For simplicity, I will use the term *aerial image* to refer to both aerial photographs and orthophotographs in this article.
-
-The image below shows an orthophoto of a residential area close to the margin of a a single orthophoto. 
-Note that the buildings are not perfect rectangles, due to the orthorectification process.
+The image below shows an example of a residential area:
 
 ![orthophoto](orthophoto-example.jpg)
 
@@ -54,40 +53,52 @@ For further analysis (e.g. to find a building to a particular location) the imag
 assigning real-world coordinates to digital maps or images, 
 allowing them to be accurately positioned and overlaid within a geographic information system (GIS).
 
-Luckily, the coordinate information is already embedded in every image file allowing us to locate a particular location (e.g. a GPS longitude and latitude) to a single pixel.
-The image data and georeferencing metadata are stored in [JPEG2000](https://en.wikipedia.org/wiki/JPEG_2000) format (`.jp2`).
+Luckily, the coordinate information is already embedded in every image file allowing us to locate a particular spatial coordinate (e.g. a GPS longitude and latitude) to a single pixel.
+The image data and georeferencing metadata are stored in [JPEG2000](https://en.wikipedia.org/wiki/JPEG_2000) format (`.jp2`). 
+You can download and take a look at the images [here](https://www.opengeodata.nrw.de/produkte/geobasis/lusat/akt/dop/dop_jp2_f10/).
 
-You can access the images [here](https://www.opengeodata.nrw.de/produkte/geobasis/lusat/akt/dop/dop_jp2_f10/).
+### Radiant exposure maps
 
-### Annual radiant exposure
+In order to obtain the amount of solar energy a roof receives, we will
+use the **radiant exposure** bitmaps (in German: *Solarkataster*). 
+Radiant exposure is the radiant energy received by a surface per unit area ($\mathrm{J/m^2}$ in SI units) during a defined timeperiod $\Delta t$.
 
-In order to estimate the amount of energy a roof covered by solar panels generates, we will
-use the **radiant exposure** bitmaps (in German: *Solarkataster*). Radiant exposure is the radiant energy received by a surface per unit area ($J/m^2$ in SI units).
+Every $0.5\mathrm{m} \times 0.5\mathrm{m}$ pixel of this bitmap contains the estimated annual (365 days) radiant exposure in $\frac{\mathrm{kWh}}{\mathrm{m^2}}$.
 
-Every pixel of this bitmap contains the expected annual energy yield in $\frac{kWh}{m^2}$.
-The values were estimated by the German Weather Service using solar radiation and weather data combined with
-digital surface models for taking account obstacles like trees or higher buildings which reduce the solar yield by casting shadows.
-More details on how those maps are created can be found in [1].
+A small numeric example: if a pixel with a exposure value of $1125 \frac{\mathrm{kWh}}{\mathrm{m^2}}$ would overlap with a solar panel 
+with 21% efficiency of the same size as the pixel ($ 0.5 \cdot 0.5 \mathrm{m^2} = 0.25 \mathrm{m^2}$),
+that part of the solar panel would yield $1125 \cdot 0.25 \cdot 21\\% \approx 59 \mathrm{kWh}$  energy 
+which is enough to boil (20°C) 491 litres of water annualy - should be enough for the daily dose of coffee.
 
-The image below shows aerial image data overlayed with radiant exposure data. Dark red areas indicate high energy yield where white areas
-indicate low solar returns.
+This amount of electricity costs ca. 23€ in Germany, 7€ in Hungary or 9€ in USA for a private household (as of March 2025).
+
+The radiant exposure was estimated using solar radiation and weather (cloud) data by the German Weather Service combined with
+[digital surface models](https://en.wikipedia.org/wiki/Digital_elevation_model). The latter alter the available solar radiation with respect to roof angles
+and obstacles (like trees or buildings) which reduce the annual solar yield further by casting shadows.
+More specific details on how those maps are created can be found in [1].
+
+The image below shows an aerial image overlayed with radiant exposure map. Dark red areas indicate high energy yields whereas white color
+indicates poor yield areas.
 
 ![solar-yield](solar-yield-example.jpg)
 
-The bitmaps are available in 50cm and 1m resolution (true length of each pixel).
-One can access the yield data [here](https://www.opengeodata.nrw.de/produkte/umwelt_klima/energie/solarkataster/strahlungsenergie_50cm/).
+The bitmaps are available in 50cm and 1m resolution (true length of each pixel) as GeoTIFF files `.tif`.
+You can download the data [here](https://www.opengeodata.nrw.de/produkte/umwelt_klima/energie/solarkataster/strahlungsenergie_50cm/).
 
 ### Data organization
 
-The area of state North Rhine-Westphalia is ca. 34000km. Since storing all the data in a single file is not
-really realistic (think of a single aerial image with 10cm resolution per pixel), thus both the images and bitmaps
-are organized in **tiles**. A tile covers a square with 1km or 4km side length.
+Before diving directly into technical details it is worth to spend a little time on understanding how the data
+(both aerial images and exposure maps) are organized and stored.
+
+The area of state North Rhine-Westphalia is around  $34000\mathrm{km}^2$. Since storing all the data in a single file is not
+really realistic (think of a single aerial image with 10cm resolution per pixel), both the images and exposure maps
+are stored in **tiles**. A tile covers a square with 1km (for aerial images) or 4km (for exposure maps) side length.
 
 The following image shows the 1km-tile coverage of aerial images of the city of Cologne:
 
 ![tiles-cologne](tiles-cologne.jpg)
 
-The tile information is encoded in the file name, e.g. here for a single 
+The tile information is encoded in the file name, here a breakdown of a single 
 aerial image `dop10rgbi_32_280_5652_1_nw_2023.jp2`:
 
 - `dop`: digital orthophotograph (i.e. aerial image)
@@ -102,15 +113,20 @@ aerial image `dop10rgbi_32_280_5652_1_nw_2023.jp2`:
 
 ## Methodology
 
-The following workflow outlines the processing of a single 1km tile.
+The following workflow outlines the processing of a single 1km tile (here `"280_5652_1"`) with all the data sources and intermediate artifacts involved.
+
+White arrows symbolize the usage of available data (e.g. aerial images) whereas the arrows with color indicate the flow of artifacts within the processing chain.
+I.e. those artifacts change when another tile (spatial area) is processed, whereas the set of source aerial images stays the same.
 
 ![methodology](methodology.png)
 
-First, all buildings, their address, their exact location and their polygon outlines (e.g. a rectangle for a simple 4 wall building) are extracted from OpenStreetMap (OSM).
-Each building is identified with a unique ID (we will just reuse the original `way_id`). The outline is used for cropping images and for extracting the solar yield.
+Enough said, let's dive into the processing steps. We start with the first blue box, where given a tile extent all buildings, described by their address, 
+exact location and polygon outlines (e.g. rectangles for simple 4-wall buildings) are extracted from OpenStreetMap (OSM).
+
+Each building is identified with a unique ID (we will just reuse the original `way_id` from OSM). The outline is used for cropping images and for extracting the solar yield.
 
 A square-shaped area around a single building is cropped from the large aerial image tiles. 
-The images are passed to an Machine Learning (ML) based solar panel segmentation model which assigns to each pixel an solar-panel existence probability.
+The images are passed to an Machine Learning (ML) based solar-panel detection model which assigns to each pixel a solar-panel existence probability.
 
 The building outlines (i.e. the building roofs) combined with solar energy yield bitmaps provide the **potential** (i.e. maximimal possible) amount of energy.
 The segmentation results are combined with solar energy yield data as well.
@@ -119,10 +135,13 @@ Together with some assumptions about the solar panel efficiency we use both to e
 The information flows into a final tabular dataset (table in grey) which can be further employed to answer
 our introductory questions about installation rates of solar panels.
 
+In the subsequent sections we will dive deeper into the technical nuances of each step.
+Feel free to skip to **Part 2** of this post (**WIP**) to see what we can do with the outputs of this process.
+
 ### Extracting building outlines
 
-First, we need to extract all buildings which exist in the desired geographical area. For that, we will use
-the OSMnx library, a Python package to access street networks and other geospatial features (such as buildings in our case) 
+First, we need to extract all buildings which exist in the desired tile (i.e. spatial area). For that, we will use
+the [OSMnx](https://osmnx.readthedocs.io/en/stable/) library, a Python package to access street networks and other geospatial features (such as buildings in our case) 
 from OSM:
 
 ```python
@@ -133,16 +152,17 @@ buildings_gdf = ox.features_from_bbox(bbox, tags={"building": True})
 ```
 
 The result is a [GeoDataFrame](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html) 
-with the OSM `way` identifier as its index. We keep the original identifier of the building, in order to find it in OpenStreetMap, e.g.
-for the building `316174397` we can find it at https://www.openstreetmap.org/way/316174397.
+with the OSM `way` identifier as its index. Keeping the original identifier of the building, facilitates visual inspection with available OSM tools.
+For example, we can find the building  with the ID `316174397` at https://www.openstreetmap.org/way/316174397.
 
-The `geometry` column of the `buildings_gdf` holds the building outline in WGS84 geodetic coordinates,
+The `geometry` column of the `buildings_gdf` holds the building outlines in WGS84 geodetic coordinates,
 i.e. it is a polygon represented as a sequence of (longitude, latitude) pairs. Note that the units of WGS84 coordinates
-are degrees and not lengths such as meters or feet. 
+are degrees and not (euclidean) lengths such as meters or feet. 
 
 In order to use the building geometries with the geographic data from OpenGeodata.NRW, they first need to be transformed
 to the UTM32N (Northern Hemisphere) coordinate system.
-The [UTM](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)-system (UTM32N is a subset) is a cartesian system, which can be used to measure lengths in meters.
+The [UTM](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)-system (UTM32N is a subset) 
+is a cartesian system, which can be used to measure lengths in meters.
 
 For the transformation we implement two helpful functions which we will use across the project:
 
@@ -170,13 +190,14 @@ The following image shows the first two entries of the building overview data:
 
 ![building-overview](building-overview-df.jpg)
 
-The dataset is used as an input for both the cropping image and energy extraction steps.
+This dataframe is used as a starting point for the subsequent steps.
 
 ### Cropping aerial images
 
-The ML-model which I selected for the detection tasks works well for a zoomed in image of a building. Therefore, 
-I need to crop the large aerial image from a single tile into smaller images, having the building of interest 
-in its center with a 5-10m margin around.
+The ML-model which I selected for the solar-panel detection cannot process a full 1km aerial image since it was trained on smaller (ca. 50-100m) images. 
+Therefore,  we need to crop our aerial image into multiple smaller images, having each building of interest 
+in its center with  some margin around. The 5-15m margin provides some context to the model - imagine looking a blach asphalt like path - 
+how do you know whether you are looking at the roof or at a path of a highway?
 
 To open the aerial image we will use the [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
 The library interprets both the pixel data as georeferencing information, which is is stored as metadata in the JPEG2000 file.
@@ -222,7 +243,7 @@ Together with image sizes it allows to compute the cropped area. This informatio
 The result of the cropping logic is a folder with images (with building-IDs as filenames) and a
 `overview.csv` table which holds the transformations and sizes:
 
-![](image-cropper-output.jpg)
+![image-cropper-output](image-cropper-output.jpg)
 
 This folder is used as input for the solar-panel detector, which we discuss next.
 
@@ -272,9 +293,12 @@ However, the result of the segmentation step is a folder with segmentation bitma
 ### Estimating energy yield
 
 In this step we determine both the **potential** and **actual** (based on segmentation bitmaps) energy yield for each building of interest.
-The potential potential yield is the maximal yield which is available from the solar radiation whereas the actual yield is the energy yield which is mined by the installed solar panels.
+The potential yield is the maximal yield which is available from the solar radiation whereas 
+the actual yield is the energy yield which is harnessed by the installed solar panels.
 
-Having a 2-dimensial energy yield bitmap (in kWh/m2) for each pixel $\mathbf  E[i,j]$ we can compute the total energy yield $E$ (in kWh) by summing up the pixel values and multiplying it with the real world area of a single pixel $A_{px}$, i.e.
+Similar to the aerial images, we can open the radiant exposure bitmaps (i.e. `.tif`) with [rasterio](https://rasterio.readthedocs.io/en/stable/) and extract parts of the bitmap as `numpy` arrays.
+Having a 2-dimensial energy yield bitmap (in kWh/m2) for each pixel $\mathbf  E[i,j]$ (which we can open with ) 
+we can compute the total energy yield $E$ (in kWh) by summing up the pixel values and multiplying it with the real world area of a single pixel $A_{px}$, i.e.
 
 $$
 E = \sum_{i, j \in M} \mathbf E [i,j] * A_{px}
@@ -361,8 +385,9 @@ mined_energy = energy * efficiency  # in kWh
 
 ## Summary
 
+With the methodology outline above we are able to estimate the harnessed energy by combining both solar panel detections and radiant exposure maps.
 
-
+TODO
 
 ## Lessons learned and possible improvements
 
