@@ -1,5 +1,5 @@
 ---
-title: "Solar Panel Analysis"
+title: "Solar Panel Yield Analysis: Part I"
 date: 2025-02-26T18:48:18+01:00
 draft: true
 math: true
@@ -12,7 +12,8 @@ Have you ever wondered how many households in your neighborhood have a solar pan
 how much solar energy is being harnessed?
 
 By combining the power of maps, aerial imagery, solar energy data and machine learning we can address those
-questions.
+questions. In this post I will discuss the technical method detecting solar panels on roofs from aerial images and estimating the energy yield.
+In the next post we will run the method on a larger village and inspect the results.
 
 ![header](header-319-5653.jpg)
 
@@ -58,16 +59,17 @@ The image data and georeferencing metadata are stored in [JPEG2000](https://en.w
 
 You can access the images [here](https://www.opengeodata.nrw.de/produkte/geobasis/lusat/akt/dop/dop_jp2_f10/).
 
-### Annual solar energy yield
+### Annual radiant exposure
 
 In order to estimate the amount of energy a roof covered by solar panels generates, we will
-use the solar energy yield (in German: *Solarkataster*) bitmaps. 
+use the **radiant exposure** bitmaps (in German: *Solarkataster*). Radiant exposure is the radiant energy received by a surface per unit area ($J/m^2$ in SI units).
+
 Every pixel of this bitmap contains the expected annual energy yield in $\frac{kWh}{m^2}$.
-The values were estimated using solar radiation and weather data provided by the German Weather Service combined with
-digital surface models for considering obstacles like trees or higher buildings which reduce the solar yield by casting shadows.
+The values were estimated by the German Weather Service using solar radiation and weather data combined with
+digital surface models for taking account obstacles like trees or higher buildings which reduce the solar yield by casting shadows.
 More details on how those maps are created can be found in [1].
 
-The image below shows aerial image data overlayed with energy yield data. Dark red areas indicate high energy yield where white areas
+The image below shows aerial image data overlayed with radiant exposure data. Dark red areas indicate high energy yield where white areas
 indicate low solar returns.
 
 ![solar-yield](solar-yield-example.jpg)
@@ -116,9 +118,6 @@ Together with some assumptions about the solar panel efficiency we use both to e
 
 The information flows into a final tabular dataset (table in grey) which can be further employed to answer
 our introductory questions about installation rates of solar panels.
-
-The subsequent sections will offer technical insights into each step. If you are interested in the technical modalities like masking raster data or selecting the right ML model, feel free to stay. Otherwise, feel free to skip ahead to the [Case Study: X](#case-study-x) section,
-where we use the final table to analyze the installation rate of a small village.
 
 ### Extracting building outlines
 
@@ -275,7 +274,7 @@ However, the result of the segmentation step is a folder with segmentation bitma
 In this step we determine both the **potential** and **actual** (based on segmentation bitmaps) energy yield for each building of interest.
 The potential potential yield is the maximal yield which is available from the solar radiation whereas the actual yield is the energy yield which is mined by the installed solar panels.
 
-Having a 2-dimensial energy yield bitmap $\mathbf E$ in kWh/m2 for each pixel we can compute the total energy yield $E$ in kWh by summing up the pixel values and multiplying it with the real world area of a single pixel $A_{px}$, i.e.
+Having a 2-dimensial energy yield bitmap (in kWh/m2) for each pixel $\mathbf  E[i,j]$ we can compute the total energy yield $E$ (in kWh) by summing up the pixel values and multiplying it with the real world area of a single pixel $A_{px}$, i.e.
 
 $$
 E = \sum_{i, j \in M} \mathbf E [i,j] * A_{px}
@@ -360,10 +359,9 @@ efficiency = 0.21
 mined_energy = energy * efficiency  # in kWh
 ```
 
-## Case study: X
-
-
 ## Summary
+
+
 
 
 ## Lessons learned and possible improvements

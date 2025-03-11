@@ -9,7 +9,7 @@
     <lastBuildDate>Wed, 26 Feb 2025 18:48:18 +0100</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Solar Panel Analysis</title>
+      <title>Solar Panel Yield Analysis: Part I</title>
       <link>http://localhost:1313/posts/solar-panel-analysis/</link>
       <pubDate>Wed, 26 Feb 2025 18:48:18 +0100</pubDate>
       <guid>http://localhost:1313/posts/solar-panel-analysis/</guid>
@@ -17,10 +17,8 @@
 &lt;p&gt;Have you ever wondered how many households in your neighborhood have a solar panel on their roof and
 how much solar energy is being harnessed?&lt;/p&gt;
 &lt;p&gt;By combining the power of maps, aerial imagery, solar energy data and machine learning we can address those
-questions.&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;header&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:1313/posts/solar-panel-analysis/header-319-5653.jpg&#34;&gt;&lt;/p&gt;
-&lt;p&gt;In the image above you see an arial photograph of Titz, North Rhine-Westphalia with
-a almost-transparent overlay highlighting whether a solar panel is installed (green) or not (purple).&lt;/p&gt;</description>
+questions. In this post I will discuss the technical method detecting solar panels on roofs from aerial images and estimating the energy yield.
+In the next post we will run the method on a larger village and inspect the results.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Bringing accident scene diagrams to life for AV simulation</title>
