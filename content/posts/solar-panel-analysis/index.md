@@ -331,7 +331,7 @@ The potential yield is the total yield which is available on the roof from the s
 the actual yield is the energy yield which is harnessed by the installed solar panels.
 
 Similar to the aerial images, we can open the radiant exposure bitmaps (i.e. `.tif`) with [rasterio](https://rasterio.readthedocs.io/en/stable/) and extract parts of the bitmap as `numpy` arrays.
-Having a 2-dimensial energy yield bitmap (in kWh/m2) for each pixel $\mathbf  E[i,j]$ (which we can open with ) 
+Having a 2-dimensional energy yield bitmap (in kWh/m2) for each pixel $\mathbf  E[i,j]$ (which we can open with ) 
 we can compute the total energy yield $E$ (in kWh) by summing up the pixel values and multiplying it with the real world area of a single pixel $A_{px}$, i.e.
 
 $$
