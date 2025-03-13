@@ -1,7 +1,7 @@
 ---
 title: "Solar Panel Energy Yield: Part I"
 date: 2025-02-26T18:48:18+01:00
-draft: true
+draft: false
 math: true
 ---
 
