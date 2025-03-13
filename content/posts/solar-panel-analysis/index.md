@@ -1,5 +1,5 @@
 ---
-title: "Solar Panel Yield Analysis: Part I"
+title: "Solar Panel Energy Yield: Part I"
 date: 2025-02-26T18:48:18+01:00
 draft: true
 math: true
@@ -12,15 +12,40 @@ Have you ever wondered how many households in your neighborhood have a solar pan
 how much solar energy is being harnessed?
 
 By combining the power of aerial imagery, solar radiation maps and machine learning we can address those
-questions. In this post I will introduce an approach of estimating the annual energy yield for buildings 
-based on the amount of installed solar panels.
+questions. In this post I will explore an approach of detecting solar panels and estimating their annual energy yield.
+I try to explain my idea step by step with many images and example calculations as possible. 
 
-In the Part 2 of this post we will run the method on a larger area (e.g. city or village) and discuss the results.
+In the next blog post (Part II) we will run the method on a larger area (e.g. city or village) and discuss the results.
 
 As a tiny appetizer, in the figure below you see an arial photograph of Titz, North Rhine-Westphalia with 
-a almost-transparent overlay highlighting whether a solar panel is installed (green) or not (purple):
+a almost-transparent overlay highlighting whether a solar panel is installed (green) or missing (purple):
 
 ![header](header-319-5653.jpg)
+
+## Table of contents
+
+- [Introduction](#introduction)
+- [Table of contents](#table-of-contents)
+- [Datasets](#datasets)
+  - [Aerial images](#aerial-images)
+  - [Radiant exposure maps](#radiant-exposure-maps)
+  - [Data organization](#data-organization)
+- [Methodology](#methodology)
+  - [Extracting building outlines](#extracting-building-outlines)
+  - [Cropping aerial images](#cropping-aerial-images)
+  - [Detecting solar panels](#detecting-solar-panels)
+  - [Estimating energy yield](#estimating-energy-yield)
+    - [Building mask](#building-mask)
+    - [Solar panel mask](#solar-panel-mask)
+    - [Considering solar panel efficiency](#considering-solar-panel-efficiency)
+    - [Computing solar panel area](#computing-solar-panel-area)
+- [Summary and outlook](#summary-and-outlook)
+- [Code](#code)
+- [Related projects](#related-projects)
+- [References](#references)
+- [Appendix](#appendix)
+  - [Detection vs. Segmentation](#detection-vs-segmentation)
+
 
 ## Datasets
 
@@ -63,12 +88,18 @@ In order to obtain the amount of solar energy a roof receives, we will
 use the **radiant exposure** bitmaps (in German: *Solarkataster*). 
 Radiant exposure is the radiant energy received by a surface per unit area ($\mathrm{J/m^2}$ in SI units) during a defined timeperiod $\Delta t$.
 
-Every $0.5\mathrm{m} \times 0.5\mathrm{m}$ pixel of this bitmap contains the estimated annual (365 days) radiant exposure in $\frac{\mathrm{kWh}}{\mathrm{m^2}}$.
+The image below shows an aerial image overlayed with radiant exposure map. Dark red areas indicate high energy yields whereas white color
+indicates poor yield areas.
+
+![solar-yield](solar-yield-example.jpg)
+
+Each $0.5\mathrm{m} \times 0.5\mathrm{m}$ pixel of this bitmap contains the estimated annual ($\Delta t = 365*24\textrm{h}$) radiant exposure in $\frac{\mathrm{kWh}}{\mathrm{m^2}}$.
 
 A small numeric example: if a pixel with a exposure value of $1125 \frac{\mathrm{kWh}}{\mathrm{m^2}}$ would overlap with a solar panel 
 with 21% efficiency of the same size as the pixel ($ 0.5 \cdot 0.5 \mathrm{m^2} = 0.25 \mathrm{m^2}$),
 that part of the solar panel would yield $1125 \cdot 0.25 \cdot 21\\% \approx 59 \mathrm{kWh}$  energy 
 which is enough to boil (20°C) 491 litres of water annualy - should be enough for the daily dose of coffee.
+Alternatively we could charge the Tesla Model S 100kWh battery to 59%.
 
 This amount of electricity costs ca. 23€ in Germany, 7€ in Hungary or 9€ in USA for a private household (as of March 2025).
 
@@ -76,11 +107,6 @@ The radiant exposure was estimated using solar radiation and weather (cloud) dat
 [digital surface models](https://en.wikipedia.org/wiki/Digital_elevation_model). The latter alter the available solar radiation with respect to roof angles
 and obstacles (like trees or buildings) which reduce the annual solar yield further by casting shadows.
 More specific details on how those maps are created can be found in [1].
-
-The image below shows an aerial image overlayed with radiant exposure map. Dark red areas indicate high energy yields whereas white color
-indicates poor yield areas.
-
-![solar-yield](solar-yield-example.jpg)
 
 The bitmaps are available in 50cm and 1m resolution (true length of each pixel) as GeoTIFF files `.tif`.
 You can download the data [here](https://www.opengeodata.nrw.de/produkte/umwelt_klima/energie/solarkataster/strahlungsenergie_50cm/).
@@ -247,28 +273,32 @@ The result of the cropping logic is a folder with images (with building-IDs as f
 
 This folder is used as input for the solar-panel detector, which we discuss next.
 
-### Running solar panel segmentation
+### Detecting solar panels
 
 The solar panel detector is responsible to detect solar panels in (cropped) aerial images. For this project
 I extended the [gabrieltseng/solar-panel-segmentation](https://github.com/gabrieltseng/solar-panel-segmentation)
-repository. The repository contains code for training and evaluating a machine-learning based segmentation model 
-which identifies the locations of solar panels from satellite (or aerial) imagery. 
+repository. The repository contains code for training and evaluating a deep-learning-based segmentation model 
+which identifies the locations of solar panels from satellite (or aerial) imagery.  The model is implemented with [PyTorch](https://pytorch.org/).
+
+The verb "detect" can sound confusing if you are experienced in computer vision, 
+to be precise: the model solves a **semantic segmentation** task.
+Semantic segmentation is a computer vision task aimed at classifying each pixel in an image into a specific category or object.
+The final goal is to produce a dense pixel-wise segmentation map of an image, where each pixel is assigned to a specific class.
+For the solar-panel detector a single label - existence of a solar panel - is assigned.
+
+Since we are only interested in the installed **area** and not the number of individual solar panels
+ *semantic* segmentation (instead of *instance* segmentation) is sufficient. Wikipedia [provides]((https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation)) a concise overview about the different segmnetation types.
 
 A ML-based segmentation model usually has two parts: an encoder and a decoder. 
 For the former a [ResNet34](https://en.wikipedia.org/wiki/Residual_neural_network) base was used.
 For the latter parts of [U-Net](https://en.wikipedia.org/wiki/U-Net) architecture were implemented.
 For further details, please refer to [segmenter.py](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/solarnet/models/segmenter.py).
 
-I chose the project because it had a well structured code, detailed installation instructions and good segmentation performance.
-According to the README, the model achieves a precision of 98.8%, and a recall of 97.7% using a threshold of 0.5 on the test dataset which was not used in the training.
+I chose the above project because it had a well structured code, detailed installation instructions and good segmentation performance:
+according to the README, the model achieves a precision of 98.8%, and a recall of 97.7%
+using a threshold of 0.5 on the test dataset.
 
-**Semantic segmentation** is a computer vision task in which the goal is to categorize each pixel in an image into a class or object.
-The goal is to produce a dense pixel-wise segmentation map of an image, where each pixel is assigned to a specific class or object.
-For the solar-panel detector a single label - existence of a solar panel - is assigned.
-Since we are only interested in the installed **area** and do not want to count the number of individual solar panels
- [*semantic*](https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation) segmentation (instead of *instance* segmentation) is sufficient.
-
-Let's take a look at a single segmentation result using the above mentioned model:
+Let's take a look at a single segmentation result:
 
 ![segmentation-example](./segmentation-example.jpg)
 
@@ -292,8 +322,10 @@ However, the result of the segmentation step is a folder with segmentation bitma
 
 ### Estimating energy yield
 
-In this step we determine both the **potential** and **actual** (based on segmentation bitmaps) energy yield for each building of interest.
-The potential yield is the maximal yield which is available from the solar radiation whereas 
+In this step we determine both the **potential** and **actual** (based on segmentation bitmaps)
+energy yield for each building of interest.
+
+The potential yield is the total yield which is available on the roof from the solar radiation whereas 
 the actual yield is the energy yield which is harnessed by the installed solar panels.
 
 Similar to the aerial images, we can open the radiant exposure bitmaps (i.e. `.tif`) with [rasterio](https://rasterio.readthedocs.io/en/stable/) and extract parts of the bitmap as `numpy` arrays.
@@ -317,9 +349,11 @@ masked_yield_bitmap = np.where(mask,
 energy = masked_yield_bitmap.sum()*pixel_area  # in kWh
 ```
 
-The difference in computing potential and actual yield is expressed in mask  $M_p$ and $M_a$ respectively.
-A mask is a set of pixels to include for the sum calculation.
-In case the full area of the roof is covered with solar panels, both masks are equal, i.e.  $M_p = M_a$.
+The key difference in computing potential and actual yield is the mask $M$.
+
+A mask is a set of pixel indices to include for the sum calculation.
+We will refer the building (-roof) mask and solar panel mask as $M_b$ and $M_s$ respectively.
+In case the roof fully is covered with solar panels, both masks are equal, i.e.  $M_b = M_s$.
 
 In the next two subsections, we briefly explore how to obtain those two masks.
 
@@ -347,7 +381,7 @@ building_mask = rasterize(
 ).astype(bool)
 ```
 
-The `building_mask` represents the mask $M_p$, which indicates the potential areas (pixels) where energy can be mined. Together with the energy yield 
+The `building_mask` represents the mask $M_b$, which indicates the potential areas (pixels) where energy can be mined. Together with the energy yield 
 bitmap $\mathbf E$ we can select the pixels relevant for the energy calculation which is shown in the third image. 
 
 #### Solar panel mask
@@ -358,7 +392,7 @@ The following figure visualizes the key steps to obtain the mask:
 ![actual-energy-yield-extraction](./actual-energy-yield-extraction.png)
 
 First we load the segmentation bitmaps (first image), apply a threshold (second image) and check if the pixels above the threshold are within the buildin outline.
-The resulting mask $M_a$ (third image) is used together with energy yield bitmap to select relevant pixels from the energy yield bitmap (last image).
+The resulting mask $M_s$ (third image) is used together with energy yield bitmap to select relevant pixels from the energy yield bitmap (last image).
 
 ```python
 segmentation_bitmap = Image.open(...)
@@ -370,10 +404,11 @@ solar_panel_detected_mask = segmentation_values > threshold
 solar_panel_mask = solar_panel_detected_mask & building_mask
 ```
 
-The `solar_panel_mask` represents the mask $M_a$, which includes the pixels where solar energy is actually mined. 
-Note that the AND operation `&` reduces the false positive panel detections, since we filter out falsely detected areas as those in the north of the building.
+The `solar_panel_mask` represents the mask $M_s$, which includes the pixels where solar energy is actually mined. 
+Note that the AND operation `&` reduces the false positive panel detections,
+since we filter out falsely detected areas as those in the north of the building.
 
-#### Actual energy yield
+#### Considering solar panel efficiency
 
 Note, that the most commercial solar panels which are used on roofs today have a conversion efficiency of [around 21%](https://css.umich.edu/publications/factsheets/energy/solar-pv-energy-factsheet).
 The conversion efficiency is the percentage of solar energy that is converted to electricity.
@@ -383,19 +418,40 @@ efficiency = 0.21
 mined_energy = energy * efficiency  # in kWh
 ```
 
-## Summary
+#### Computing solar panel area
+
+$$
+A_{\textrm{solar}} = \sum_{i, j \in M_s} A_{px}
+$$
+
+## Summary and outlook
 
 With the methodology outline above we are able to estimate the harnessed energy by combining both solar panel detections and radiant exposure maps.
 
-TODO
+For the particular building in the example we have:
 
-## Lessons learned and possible improvements
+- Area roof $A_\textrm{roof}  = 195.75\mathrm{m^2}$ and area solar panels $A_\textrm{installed}  = 23.25\mathrm{m^2}$
+- Highest possible yield $E_\textrm{max} = 180,683 \textrm{kWh}$
+- Estimated yield with installed solar panels (21% efficiency) $E_\textrm{installed} = 5,747 \textrm{kWh}$
 
+The amount of harnessed energy is enough to charge a Model S 100kWh battery over 50 times.
+I leave the calculation for boiling water to the reader.
 
-- group detect for multiple buildings at once
-- use segmentation models
-- Alternatively, at the detection step
-we could transform the detection box back to UTM32. Store Afiinity Matrix Instead (smaller)
+Now, if we do the same calculation for all buildings in a village or city, we can compute some statistics:
+
+- proportion of buildings with a solar panel installed
+- average area of solar panels
+- annual/daily energy yield
+
+But I leave that for the next blog post.
+
+Thank you for taking the time to read this article! Don't hesitate to reach out [reach out](mailto:kopytjuk@mailbox.org) 
+if you have questions or suggestions.
+I'm always eager to connect and continue the conversation.
+
+## Code
+
+You can find my code here: [kopytjuk/solar-panel-coverage-nrw](https://github.com/kopytjuk/solar-panel-coverage-nrw)
 
 ## Related projects
 
@@ -408,24 +464,17 @@ we could transform the detection box back to UTM32. Store Afiinity Matrix Instea
 
 ## Appendix
 
-### Selecting ML detector
+### Detection vs. Segmentation
 
-In order to avoid training a completely new model, which is a task on its own, I was looking into existing projects with pre-trained models.
+In order to avoid training a completely new model, which is a task on its own, I initially was looking into existing projects with pre-trained models.
 
-Below some notes on the my selection criteria while searching for the model:
-
-- Task type: Since my goal was to estimate the installed energy yield, I needed a model to estimate both the position and size of an installed solar panel.
-That means, a classification model, which just provides a binary estimate of an existence if a solar panel in the image is not sufficient. Thus, ideally, the model would solve a **segmentation** task (see [here](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/diagrams/segmentation_predictions.png) for an example).
-- Dependencies: Since the majority of geospatial libraries require at least Python 3.9, I did not want to deal with deprecated tools (e.g. some projects from 2012 used Python 2.7). Thus I looked for projects with modern Python versions.
-- Documentation maturity: I value clear structured code, developer friendly installation instructions and available metrics on models
-
-
-In the end I chose [ArielDrabkin/Solar-Panel-Detector](https://github.com/ArielDrabkin/Solar-Panel-Detector), which contains the model weights, a CLI interface and even a [Gradio](https://www.gradio.app/) GUI application. The app is [hosted](https://huggingface.co/spaces/ArielDrabkin/Solar-Panel-Detector) on Huggingface. A violation of my criteria above, the model is trained to solve a **detection** (not segmentation) task, i.e. it outputs 2D bounding boxes of detected objects in the image.
+I found [ArielDrabkin/Solar-Panel-Detector](https://github.com/ArielDrabkin/Solar-Panel-Detector), which contains the model weights, a CLI interface and even a [Gradio](https://www.gradio.app/) GUI application. The app is [hosted](https://huggingface.co/spaces/ArielDrabkin/Solar-Panel-Detector) on Huggingface. Since it is a model which is trained to solve an *object detection* task,
+it outputs 2D bounding boxes of detected objects in the image.
 
 The following figure shows an areal image from a sample building with two detections with the corresponding confidence scores:
 
 ![solar-panel-detector-example](solar-panel-detector-example.png)
 
-TODO: Write about the disadvantage of detection
-
-...
+The model is good enough to detects whether solar panels are installed, but deriving areas is not really possible, because the bounding boxes
+are not rotated. Of course, object detectors with rotated bounding boxes exist, but integrating them into the model is the same effort as using
+and training segmentation model from scratch, so I went with the segmnetation approach.
