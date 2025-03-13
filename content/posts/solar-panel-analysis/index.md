@@ -86,9 +86,9 @@ You can download and take a look at the images [here](https://www.opengeodata.nr
 
 In order to obtain the amount of solar energy a roof receives, we will
 use the **radiant exposure** bitmaps (in German: *Solarkataster*). 
-Radiant exposure is the radiant energy received by a surface per unit area ($\mathrm{J/m^2}$ in SI units) during a defined timeperiod $\Delta t$.
+Radiant exposure is the radiant energy received by a surface per unit area ($\mathrm{J/m^2}$ in SI units) during a defined time period $\Delta t$.
 
-The image below shows an aerial image overlayed with radiant exposure map. Dark red areas indicate high energy yields whereas white color
+The image below shows an aerial image overlaid with radiant exposure map. Dark red areas indicate high energy yields whereas white color
 indicates poor yield areas.
 
 ![solar-yield](solar-yield-example.jpg)
@@ -154,9 +154,9 @@ Each building is identified with a unique ID (we will just reuse the original `w
 A square-shaped area around a single building is cropped from the large aerial image tiles. 
 The images are passed to an Machine Learning (ML) based solar-panel detection model which assigns to each pixel a solar-panel existence probability.
 
-The building outlines (i.e. the building roofs) combined with solar energy yield bitmaps provide the **potential** (i.e. maximimal possible) amount of energy.
+The building outlines (i.e. the building roofs) combined with solar energy yield bitmaps provide the **potential** (i.e. maximum possible) amount of energy.
 The segmentation results are combined with solar energy yield data as well.
-Together with some assumptions about the solar panel efficiency we use both to estimate the **actual** energy yield, as harnessed anually. 
+Together with some assumptions about the solar panel efficiency we use both to estimate the **actual** energy yield, as harnessed annually. 
 
 The information flows into a final tabular dataset (table in grey) which can be further employed to answer
 our introductory questions about installation rates of solar panels.
@@ -167,7 +167,7 @@ Feel free to skip to **Part 2** of this post (**WIP**) to see what we can do wit
 ### Extracting building outlines
 
 First, we need to extract all buildings which exist in the desired tile (i.e. spatial area). For that, we will use
-the [OSMnx](https://osmnx.readthedocs.io/en/stable/) library, a Python package to access street networks and other geospatial features (such as buildings in our case) 
+the [OSMnx](https://osmnx.readthedocs.io/en/stable/) library, a Python package to access street networks and other geo-spatial features (such as buildings in our case) 
 from OSM:
 
 ```python
@@ -221,9 +221,8 @@ This dataframe is used as a starting point for the subsequent steps.
 ### Cropping aerial images
 
 The ML-model which I selected for the solar-panel detection cannot process a full 1km aerial image since it was trained on smaller (ca. 50-100m) images. 
-Therefore,  we need to crop our aerial image into multiple smaller images, having each building of interest 
-in its center with  some margin around. The 5-15m margin provides some context to the model - imagine looking a blach asphalt like path - 
-how do you know whether you are looking at the roof or at a path of a highway?
+Therefore,  we need to crop the aerial image into multiple smaller images, having each building of interest 
+in its center with a small (5-15m) margin around. The margin provides some context to the model - without the margin an asphalt-black image is hard to assign to a dark roof or a dark patch of the highway.
 
 To open the aerial image we will use the [rasterio](https://rasterio.readthedocs.io/en/stable/) Python library.
 The library interprets both the pixel data as georeferencing information, which is is stored as metadata in the JPEG2000 file.
@@ -287,7 +286,7 @@ The final goal is to produce a dense pixel-wise segmentation map of an image, wh
 For the solar-panel detector a single label - existence of a solar panel - is assigned.
 
 Since we are only interested in the installed **area** and not the number of individual solar panels
- *semantic* segmentation (instead of *instance* segmentation) is sufficient. Wikipedia [provides]((https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation)) a concise overview about the different segmnetation types.
+ *semantic* segmentation (instead of *instance* segmentation) is sufficient. Wikipedia [provides]((https://en.wikipedia.org/wiki/Image_segmentation#Groups_of_image_segmentation)) a concise overview about the different segmentation types.
 
 A ML-based segmentation model usually has two parts: an encoder and a decoder. 
 For the former a [ResNet34](https://en.wikipedia.org/wiki/Residual_neural_network) base was used.
@@ -295,19 +294,19 @@ For the latter parts of [U-Net](https://en.wikipedia.org/wiki/U-Net) architectur
 For further details, please refer to [segmenter.py](https://github.com/gabrieltseng/solar-panel-segmentation/blob/master/solarnet/models/segmenter.py).
 
 I chose the above project because it had a well structured code, detailed installation instructions and good segmentation performance:
-according to the README, the model achieves a precision of 98.8%, and a recall of 97.7%
+according to the author, the model achieves a precision of 98.8%, and a recall of 97.7%
 using a threshold of 0.5 on the test dataset.
 
 Let's take a look at a single segmentation result:
 
 ![segmentation-example](./segmentation-example.jpg)
 
-The figure shows the input and outputs of the segentation process. The left image is the input to the segmentation model. The red building outline is added for inspection purposes.
+The figure shows the input and outputs of the segmentation process. The left image is the input to the segmentation model. The red building outline is added for inspection purposes.
 
 The bitmap in the middle shows the raw output from the model, where each pixel holds the probability for the existence of a solar panel, between 0 (dark blue) and 1 (yellow).
 
 In order to employ the result for energy yield estimation we need a **binary value** for each pixel, indicating whether a solar panel is installed or not. 
-A simple method is [thresholding](https://en.wikipedia.org/wiki/Thresholding_(image_processing)) applied on top of the segmented image. 
+A simple method of [Thresholding](https://en.wikipedia.org/wiki/Thresholding_(image_processing)) is applied on top of the segmented image. 
 Values above the threshold indicate that a solar panel is installed, values below indicate the contrary.
 The image on the right shows the result of using the threshold of 0.5, where yellow pixels indicate, that a solar panel is available.
 
@@ -316,7 +315,7 @@ we are ingesting into the model after it is trained (i.e. the **inference** of t
 
 The training data used for training the model is satellite imagery from United States Geological Survey (USGS), which provides extensive collection of [publicly available](https://earthexplorer.usgs.gov/)
 high-resolution aerial orthoimagery from across the United States. It can be the case, that the roof materials and shapes in Germany are different to the ones in the US, leading to errors.
-There can also be a difference in camera hardware, which representents colors in a slightly different way.
+There can also be a difference in camera hardware, which represents colors in a slightly different way.
 
 However, the result of the segmentation step is a folder with segmentation bitmaps with each bitmap corresponding to a single input image.
 
@@ -391,7 +390,7 @@ The following figure visualizes the key steps to obtain the mask:
 
 ![actual-energy-yield-extraction](./actual-energy-yield-extraction.png)
 
-First we load the segmentation bitmaps (first image), apply a threshold (second image) and check if the pixels above the threshold are within the buildin outline.
+First we load the segmentation bitmaps (first image), apply a threshold (second image) and check if the pixels above the threshold are within the building outline.
 The resulting mask $M_s$ (third image) is used together with energy yield bitmap to select relevant pixels from the energy yield bitmap (last image).
 
 ```python
@@ -477,4 +476,4 @@ The following figure shows an areal image from a sample building with two detect
 
 The model is good enough to detects whether solar panels are installed, but deriving areas is not really possible, because the bounding boxes
 are not rotated. Of course, object detectors with rotated bounding boxes exist, but integrating them into the model is the same effort as using
-and training segmentation model from scratch, so I went with the segmnetation approach.
+and training segmentation model from scratch, so I went with the segmentation approach.
