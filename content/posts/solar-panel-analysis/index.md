@@ -277,7 +277,8 @@ This folder is used as input for the solar-panel detector, which we discuss next
 The solar panel detector is responsible to detect solar panels in (cropped) aerial images. For this project
 I extended the [gabrieltseng/solar-panel-segmentation](https://github.com/gabrieltseng/solar-panel-segmentation)
 repository. The repository contains code for training and evaluating a deep-learning-based segmentation model 
-which identifies the locations of solar panels from satellite (or aerial) imagery.  The model is implemented with [PyTorch](https://pytorch.org/).
+which identifies the locations of solar panels from satellite (or aerial) imagery.
+The model is implemented with [PyTorch](https://pytorch.org/).
 
 The verb "detect" can sound confusing if you are experienced in computer vision, 
 to be precise: the model solves a **semantic segmentation** task.
@@ -318,6 +319,8 @@ high-resolution aerial orthoimagery from across the United States. It can be the
 There can also be a difference in camera hardware, which represents colors in a slightly different way.
 
 However, the result of the segmentation step is a folder with segmentation bitmaps with each bitmap corresponding to a single input image.
+
+Side note: prior to using a segmentation model, [I also tried](#detection-vs-segmentation) to use an object detection model, with low success.
 
 ### Estimating energy yield
 
