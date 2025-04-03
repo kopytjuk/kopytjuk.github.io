@@ -459,7 +459,8 @@ You can find my code here: [kopytjuk/solar-panel-coverage-nrw](https://github.co
 
 - https://www.appsilon.com/post/using-ai-to-detect-solar-panels-part-1 (uses segmentation)
 - [Stanford DeepSolar](https://deepsolar.web.app/)
-
+- Microsoft's [Global Renewables Watch](https://www.globalrenewableswatch.org/atlas) project, a living atlas that maps and measures **all** utility-scale solar and onshore wind installations on Earth using artificial intelligence (AI) and satellite imagery, employs  conv-net image segmentation to find solar panels. The underlying methodology used in Global Renewables Watch is described in this [paper](https://www.nature.com/articles/s41597-022-01499-9).
+  
 ## References
 
 [1] [LANUV Info 43](https://www.energieatlas.nrw.de/site/service/download_publikationen) (PDF)
