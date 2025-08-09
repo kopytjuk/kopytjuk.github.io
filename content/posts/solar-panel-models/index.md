@@ -19,7 +19,7 @@ While I wanted to extend the approach from one building to villages the [segment
 
 Although the solar roof array in the lower left was detected quite accurately, there are many false positives — especially in the darker areas of the image. I have several hypotheses explaining why the model’s performance is suboptimal.
 
-The main reason is that the training/test dataset and the images used for inference came from entirely different sources, causing a distribution shift. The training data was taken from publicly available aerial imagery in California, while the inference data came from Germany. Although both datasets consist of aerial images, the geographical differences lead to variations—such as roof colors and solar panel orientations—that can impact model performance. Another difference may be the different imaging equipment and cropping procedures
+The main reason is that the training/test dataset and the images used for inference came from entirely different sources, causing a distribution shift. The training data was taken from publicly available aerial imagery in California, while the inference data came from Germany. Although both datasets consist of aerial images, the geographical differences lead to variations — such as roof colors and solar panel orientations—that can impact model performance. Another difference may be the different imaging equipment and cropping procedures
 while creating the training data.
 
 To improve segmentation performance, I explored increasing dataset diversity by incorporating other publicly available datasets and models. In addition, I’d like to share some of the projects I discovered during my research.
